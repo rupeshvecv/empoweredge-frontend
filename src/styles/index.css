@@ -1,0 +1,81 @@
+@import "tailwindcss";
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+/* ----- bespoke CSS lifted verbatim from the HTML prototype ----- */
+body {
+  body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  
+}
+
+}
+
+.table {
+  min-width: 100%;
+  border: 1px solid #e5e7eb;
+  background-color: #fff;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+.table th {
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+      background-color: #191970;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: bold;
+}
+.table td {
+  padding: 0.25rem;
+  border: 1px solid #e5e7eb;
+}
+.input {
+  border: 1px solid #e5e7eb;
+  padding: 0.25rem;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  border-radius: 0.25rem;
+}
+.btn-primary {
+  background-color:#191970;
+  color: #fff;
+  padding: 0 0.25rem;
+  margin: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+.btn-primary:hover {
+  background-color: #4338ca;
+}
+.btn-light {
+  background-color: #d1d5db;
+  padding: 0.5rem 0.5rem;
+  border-radius: 0.25rem;
+}
+.link {
+  text-decoration: underline;
+  cursor: pointer;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+.card {
+  background-color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  padding: 2rem;
+  width: 100%;
+  max-width: 28rem;
+}
+.portal-card {
+  transition: all 0.2s;
+}
