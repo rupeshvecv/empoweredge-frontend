@@ -61,7 +61,8 @@ export default function RoleTable() {
         </div>
       </div>
 
-      <table className="table text-sm">
+      {/* 👇 This table now uses .table CSS */}
+      <table className="table">
         <thead>
           <tr>
             <th>ID</th>
@@ -86,15 +87,17 @@ export default function RoleTable() {
                   }}
                 />
               </td>
-              <td className="flex gap-2">
-                <button onClick={close} className="btn-light">Cancel</button>
-                <button onClick={add} className="btn-primary">Save</button>
+              <td>
+                <div className="flex gap-2">
+                  <button onClick={close} className="btn-light">Cancel</button>
+                  <button onClick={add} className="btn-primary">Save</button>
+                </div>
               </td>
             </tr>
           )}
 
           {/* Existing roles with inline editing */}
-          {roles.map(r => (
+          {roles.map(r =>
             mode === "edit-inline" && editing?.id === r.id ? (
               <tr key={r.id}>
                 <td>{r.id}</td>
@@ -109,34 +112,38 @@ export default function RoleTable() {
                     }}
                   />
                 </td>
-                <td className="flex gap-2">
-                  <button onClick={close} className="btn-light">Cancel</button>
-                  <button onClick={save} className="btn-primary">Save</button>
+                <td>
+                  <div className="flex gap-2">
+                    <button onClick={close} className="btn-light">Cancel</button>
+                    <button onClick={save} className="btn-primary">Save</button>
+                  </div>
                 </td>
               </tr>
             ) : (
               <tr key={r.id}>
                 <td>{r.id}</td>
                 <td>{r.roleName}</td>
-                <td className="flex gap-3">
-                  <button
-                    onClick={() => openEditInline(r)}
-                    className="p-1 rounded-full bg-green-100 text-green-700 hover:bg-green-200"
-                    title="Edit"
-                  >
-                    <FiEdit size={18} />
-                  </button>
-                  <button
-                    onClick={() => remove(r.id)}
-                    className="p-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200"
-                    title="Delete"
-                  >
-                    <FiTrash size={18} />
-                  </button>
+                <td>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => openEditInline(r)}
+                      className="p-1 rounded-full bg-green-100 text-green-700 hover:bg-green-200"
+                      title="Edit"
+                    >
+                      <FiEdit size={18} />
+                    </button>
+                    <button
+                      onClick={() => remove(r.id)}
+                      className="p-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200"
+                      title="Delete"
+                    >
+                      <FiTrash size={18} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             )
-          ))}
+          )}
         </tbody>
       </table>
     </div>
