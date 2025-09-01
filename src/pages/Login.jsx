@@ -4,14 +4,16 @@ import logo from "../assets/logo.jpg";
 import api, { setAuthToken } from "../api";
 
 export default function Login() {
-  const [form, setForm] = useState({ id: "", password: "" });
+  const [form, setForm] = useState({ login: "", password: "" });
   const nav = useNavigate();
 
   async function submit(e) {
     e.preventDefault();
     try {
-      const { data } = await api.post("/auth/login", form); // { id, role, token }
+      const { data } = await api.post("http://localhost:9080/api/auth/login", form); // { id, role, token }
       localStorage.setItem("user", JSON.stringify(data));
+      console.log(dataJSON.stringify(data));
+      console.log(data.token);
       setAuthToken(data.token);
       nav("/portals");
     } catch {
@@ -25,8 +27,8 @@ export default function Login() {
         <img src={logo} alt="logo" className="h-20 mx-auto" />
         <h2 className="text-center text-2xl font-extrabold">Employee Sign In</h2>
         <input
-          value={form.id}
-          onChange={e => setForm({ ...form, id: e.target.value })}
+          value={form.login}
+          onChange={e => setForm({ ...form, login: e.target.value })}
           placeholder="Employee Mail ID or Code"
           className="input"
           autoComplete="username"

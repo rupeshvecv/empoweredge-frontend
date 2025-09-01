@@ -1,28 +1,33 @@
 import logo from "../assets/logo.jpg";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import React from "react";
+import { AuthContext } from "react-oauth2-code-pkce";
 
 export default function Header() {
   const [animate, setAnimate] = useState(false);
   const [open, setOpen] = useState(false);
   const nav = useNavigate();
   const ref = useRef(null);
-
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const isAdmin = user.role === "admin";
-  const userName = user.id || "User";
+  //const userName = user.id || "User";
+
+  // get token from authcontext
+
+  const {token, tokenData,logIn,isAuthenticated, logOut} = useContext(AuthContext);
 
   useEffect(() => {
     setAnimate(true);
     const outside = e => ref.current && !ref.current.contains(e.target) && setOpen(false);
     document.addEventListener("mousedown", outside);
+    console.log('token '+token);
     return () => document.removeEventListener("mousedown", outside);
-  }, []);
+  }, [token]);
 
   const logout = () => {
-    localStorage.removeItem("user");
-    nav("/login");
+    console.log('Logging out...');
+    // logOut();
   };
 
   return (
@@ -39,7 +44,7 @@ export default function Header() {
 
       <div className="relative flex items-center gap-2" ref={ref}>
         <span className="hidden sm:block text-sm">
-          Welcome, {userName}
+          Welcome, {token}
           {isAdmin && (
             <span className="ml-2 bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded font-bold">
               Admin
