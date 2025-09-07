@@ -1,48 +1,24 @@
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import logo from "../assets/logo.jpg";
-import api, { setAuthToken } from "../api";
+import React, { useContext } from 'react';
+import { AuthContext } from 'react-oauth2-code-pkce';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
-  const [form, setForm] = useState({ login: "", password: "" });
+  const { logIn, loginInProgress } = useContext(AuthContext);
   const nav = useNavigate();
 
-  async function submit(e) {
-    e.preventDefault();
-    try {
-      const { data } = await api.post("http://localhost:9080/api/auth/login", form); // { id, role, token }
-      localStorage.setItem("user", JSON.stringify(data));
-      console.log(dataJSON.stringify(data));
-      console.log(data.token);
-      setAuthToken(data.token);
-      nav("/portals");
-    } catch {
-      alert("Invalid credentials");
-    }
+  const goLogin = () => {
+    // logIn() triggers PKCE redirect (or popup if configured)
+    logIn(); 
+    // after successful redirect, react-oauth2-code-pkce will populate token in context
+    // you can redirect to /portals from a postLogin callback instead. For simplicity:
+    setTimeout(() => nav('/portals'), 1000);
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-indigo-800 p-4">
-      <form onSubmit={submit} className="card space-y-6">
-        <img src={logo} alt="logo" className="h-20 mx-auto" />
-        <h2 className="text-center text-2xl font-extrabold">Employee Sign In</h2>
-        <input
-          value={form.login}
-          onChange={e => setForm({ ...form, login: e.target.value })}
-          placeholder="Employee Mail ID or Code"
-          className="input"
-          autoComplete="username"
-        />
-        <input
-          type="password"
-          value={form.password}
-          onChange={e => setForm({ ...form, password: e.target.value })}
-          placeholder="Password"
-          className="input"
-          autoComplete="current-password"
-        />
-        <button className="btn-primary w-full">Sign In</button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center">
+      <button onClick={goLogin} disabled={loginInProgress} className="btn-primary">
+        Sign in with Empower (Keycloak)
+      </button>
     </div>
   );
 }

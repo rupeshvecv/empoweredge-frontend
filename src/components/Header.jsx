@@ -9,25 +9,22 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const nav = useNavigate();
   const ref = useRef(null);
-  const user = JSON.parse(localStorage.getItem("user")) || {};
-  const isAdmin = user.role === "admin";
-  //const userName = user.id || "User";
 
-  // get token from authcontext
-
-  const {token, tokenData,logIn,isAuthenticated, logOut} = useContext(AuthContext);
+  const { token, tokenData, logOut, logIn } = useContext(AuthContext);
+  const username = tokenData?.preferred_username || tokenData?.email || 'User';
+  console.log('Header rendered with user:', username);
+  console.log('token:', token);
 
   useEffect(() => {
     setAnimate(true);
     const outside = e => ref.current && !ref.current.contains(e.target) && setOpen(false);
     document.addEventListener("mousedown", outside);
-    console.log('token '+token);
     return () => document.removeEventListener("mousedown", outside);
-  }, [token]);
+   }, );
 
   const logout = () => {
-    console.log('Logging out...');
-    // logOut();
+    localStorage.removeItem("user");
+    nav("/login");
   };
 
   return (
@@ -44,12 +41,7 @@ export default function Header() {
 
       <div className="relative flex items-center gap-2" ref={ref}>
         <span className="hidden sm:block text-sm">
-          Welcome, {token}
-          {isAdmin && (
-            <span className="ml-2 bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded font-bold">
-              Admin
-            </span>
-          )}
+          Welcome, {username}          
         </span>
 
         <button onClick={() => setOpen(o => !o)} className="hover:text-gray-200">

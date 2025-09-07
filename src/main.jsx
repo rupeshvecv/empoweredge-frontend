@@ -4,7 +4,7 @@ if (!localStorage.getItem("user")) {
     "user",
     JSON.stringify({
       id:   "Rupesh",   // any name
-      role: "admin",      // ← this makes the app treat you as admin
+      role: "admin",      // ? this makes the app treat you as admin
       token: "dev-session"
     })
   );
@@ -29,4 +29,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </React.StrictMode>
 );
-
