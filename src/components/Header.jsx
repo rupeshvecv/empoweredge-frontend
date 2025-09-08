@@ -17,6 +17,10 @@ export default function Header() {
     tokenData?.realm_access?.roles || tokenData?.resource_access?.roles || [];
   const isAdmin = roles.includes("admin");
 
+  console.log("User roles:", roles);
+  console.log("User isAdmin:", isAdmin);
+  console.log("User token:", token);
+
   useEffect(() => {
     setAnimate(true);
     const outside = (e) =>
