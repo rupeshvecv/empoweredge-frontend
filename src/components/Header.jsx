@@ -7,12 +7,25 @@ import { AuthContext } from "react-oauth2-code-pkce";
 export default function Header() {
   const [animate, setAnimate] = useState(false);
   const [open, setOpen] = useState(false);
+  const [profile, setProfile] = useState(null); // ✅ store user profile
   const nav = useNavigate();
   const ref = useRef(null);
 
   const { token, tokenData, logOut, logIn } = useContext(AuthContext);
 
-  const username = tokenData?.preferred_username || tokenData?.email || "User";
+  // fallback to token claims if userinfo not loaded
+  const username = profile?.preferred_username || tokenData?.preferred_username || tokenData?.email || "User";
+  //const username = tokenData?.preferred_username || tokenData?.email || "User";
+  
+  const fullName = profile?.given_name && profile?.family_name 
+  ? `${profile.given_name} ${profile.family_name}` 
+  : "";
+const department = profile?.department || "";
+const designation = profile?.designation || "";
+console.log("User fullName:", fullName);
+console.log("User department:", department);
+console.log("User designation:", designation);
+
   const roles =
     tokenData?.realm_access?.roles || tokenData?.resource_access?.roles || [];
   const isAdmin = roles.includes("admin");
@@ -29,7 +42,25 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", outside);
   }, []);
 
-  // ✅ Logout then redirect to Keycloak login
+  // ✅ Fetch Keycloak UserInfo endpoint when token changes
+  useEffect(() => {
+    if (token) {
+      fetch(
+        "http://localhost:8443/realms/oauth2-empower-realm/protocol/openid-connect/userinfo",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("UserInfo from Keycloak:", data);
+          setProfile(data);
+        })
+        .catch((err) => console.error("Failed to fetch userinfo:", err));
+    }
+  }, [token]);
+
+   //✅ Logout and immediately login again
   const handleLogoutAndLogin = async () => {
     await logOut({
       redirectUri: window.location.origin // return here after logout
@@ -50,7 +81,7 @@ export default function Header() {
       </span>
 
       <div className="relative flex items-center gap-2" ref={ref}>
-        <span className="hidden sm:block text-sm">Welcome, {username}</span>
+        <span className="hidden sm:block text-sm">Welcome, {fullName}</span>
 
         <button
           onClick={() => setOpen((o) => !o)}
