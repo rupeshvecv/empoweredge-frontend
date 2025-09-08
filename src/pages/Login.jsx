@@ -17,7 +17,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <button onClick={goLogin} disabled={loginInProgress} className="btn-primary">
-        Sign in with Empower (Keycloak)
+        Sign in with Empower
       </button>
     </div>
   );
