@@ -81,7 +81,7 @@ console.log("User designation:", designation);
       </span>
 
       <div className="relative flex items-center gap-2" ref={ref}>
-        <span className="hidden sm:block text-sm">Welcome, {fullName}</span>
+        <span className="hidden sm:block text-sm">Welcome, {fullName} ({department})</span>
 
         <button
           onClick={() => setOpen((o) => !o)}
