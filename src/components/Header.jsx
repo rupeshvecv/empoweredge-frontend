@@ -7,28 +7,35 @@ import { AuthContext } from "react-oauth2-code-pkce";
 export default function Header() {
   const [animate, setAnimate] = useState(false);
   const [open, setOpen] = useState(false);
-  const [profile, setProfile] = useState(null); // ✅ store user profile
+  const [profile, setProfile] = useState(null); 
   const nav = useNavigate();
   const ref = useRef(null);
 
   const { token, tokenData, logOut, logIn } = useContext(AuthContext);
 
-  // fallback to token claims if userinfo not loaded
-  const username = profile?.preferred_username || tokenData?.preferred_username || tokenData?.email || "User";
-  //const username = tokenData?.preferred_username || tokenData?.email || "User";
-  
-  const fullName = profile?.given_name && profile?.family_name 
-  ? `${profile.given_name} ${profile.family_name}` 
-  : "";
-const department = profile?.department || "";
-const designation = profile?.designation || "";
-console.log("User fullName:", fullName);
-console.log("User department:", department);
-console.log("User designation:", designation);
+  // ✅ Extract user info
+  const username =
+    profile?.preferred_username ||
+    tokenData?.preferred_username ||
+    tokenData?.email ||
+    "User";
 
-  const roles =
-    tokenData?.realm_access?.roles || tokenData?.resource_access?.roles || [];
-  const isAdmin = roles.includes("admin");
+  const fullName =
+    profile?.given_name && profile?.family_name
+      ? `${profile.given_name} ${profile.family_name}`
+      : "";
+
+  const department = profile?.department || "";
+  const designation = profile?.designation || "";
+
+  console.log("User fullName:", fullName);
+  console.log("User department:", department);
+  console.log("User designation:", designation);
+
+  // ✅ Pick the correct clientId roles (change this to your portal client)
+  const clientId = "oauth2-edc-client"; // or "oauth2-empower-client"
+  const roles = tokenData?.resource_access?.[clientId]?.roles || [];
+  const isAdmin = roles.includes("Admin"); // keycloak roles are case-sensitive
 
   console.log("User roles:", roles);
   console.log("User isAdmin:", isAdmin);
@@ -60,12 +67,12 @@ console.log("User designation:", designation);
     }
   }, [token]);
 
-   //✅ Logout and immediately login again
+  // ✅ Logout and immediately login again
   const handleLogoutAndLogin = async () => {
     await logOut({
-      redirectUri: window.location.origin // return here after logout
+      redirectUri: window.location.origin,
     });
-    logIn(); // immediately start new login
+    logIn();
   };
 
   return (
@@ -81,7 +88,9 @@ console.log("User designation:", designation);
       </span>
 
       <div className="relative flex items-center gap-2" ref={ref}>
-        <span className="hidden sm:block text-sm">Welcome, {fullName} ({department})</span>
+        <span className="hidden sm:block text-sm">
+          Welcome, {fullName} ({department})
+        </span>
 
         <button
           onClick={() => setOpen((o) => !o)}
@@ -107,7 +116,7 @@ console.log("User designation:", designation);
                 <button
                   onClick={() => {
                     setOpen(false);
-                    nav("/admin/role");
+                    nav("/roletable");
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
@@ -117,7 +126,7 @@ console.log("User designation:", designation);
                 <button
                   onClick={() => {
                     setOpen(false);
-                    nav("/admin/user");
+                    nav("/userTable");
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
@@ -128,7 +137,8 @@ console.log("User designation:", designation);
             )}
             <button
               onClick={handleLogoutAndLogin}
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600">
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+            >
               Sign Out
             </button>
           </div>

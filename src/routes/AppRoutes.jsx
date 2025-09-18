@@ -4,14 +4,18 @@ import PortalSelector from '../pages/PortalSelector';
 import Callback from '../pages/Callback';
 import Login from '../pages/Login';
 import ProtectedPage from '../pages/ProtectedPage';
+import Role from "../pages/admin/RoleTable";
+import User from '../pages/admin/UserTable';
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<PortalSelector />} />
       <Route path="/callback" element={<Callback />} />
-      <Route path="/login" element={<Login />} />
+      {/* <Route path="/login" element={<Login />} /> */}
       <Route path="/portals" element={<ProtectedPage />} />
+      <Route path="/roleTable" element={<Role />} />
+      <Route path="/userTable" element={<User />} />
       {/* add other routes */}
     </Routes>
   );
