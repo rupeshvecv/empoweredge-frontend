@@ -1,0 +1,90 @@
+import { jwtDecode } from "jwt-decode"; // Import jwt-decode
+import api from "./api"; // Import the configured axios instance
+
+// Function to fetch user profile from the backend
+const fetchUserProfile = async () => {
+  try {
+    // Assuming there's an endpoint like /api/users/profile that returns the current user's details
+    // based on the JWT in the Authorization header.
+    const response = await api.get("/users/profile");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return null;
+  }
+};
+
+
+export const login = async (username, password) => {
+  try {
+    const response = await api.post("/auth/login", { userName:username, password });
+    const { token, user } = response.data;
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    return Promise.resolve(token);
+  } catch (error) {
+    console.error("Login failed:", error);
+    throw error; // Re-throw the error to be handled by the component
+  }
+};
+
+export const getToken = () => localStorage.getItem("token");
+
+export const logout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user"); // Also remove user details if stored separately
+};
+
+export const isAuthenticated = () => {
+  const token = getToken();
+  if (!token) {
+    return false;
+  }
+  try {
+    const decodedToken = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+    return decodedToken.exp > currentTime;
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return false;
+  }
+};
+
+export const getCurrentUser = () => {
+  const user = localStorage.getItem("user");
+  if (user !== null && user !== "undefined") { // Check for null and "undefined" string
+    try {
+      const parsedUser = JSON.parse(user);
+      console.log("Current User from localStorage:", parsedUser); // Log user from local storage
+      return parsedUser;
+    } catch (error) {
+      console.error("Error parsing user from local storage:", error);
+      localStorage.removeItem("user"); // Clear potentially corrupted data
+    }
+  }
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return null;
+  }
+  try {
+    const decodedToken = jwtDecode(token);
+    console.log("Decoded JWT Token:", decodedToken); // Log decoded token
+    return decodedToken;
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return null;
+  }
+};
+
+// Exporting as named exports instead of default
+const authService = {
+  login,
+  getToken,
+  logout,
+  isAuthenticated,
+  getCurrentUser,
+};
+
+export default authService;

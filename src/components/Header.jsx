@@ -1,45 +1,21 @@
 import logo from "../assets/logo.jpg";
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import React from "react";
-import { AuthContext } from "react-oauth2-code-pkce";
+import authService from '../services/authService'; // Import authService
 
 export default function Header() {
   const [animate, setAnimate] = useState(false);
   const [open, setOpen] = useState(false);
-  const [profile, setProfile] = useState(null); 
-  const nav = useNavigate();
+  const navigate = useNavigate();
   const ref = useRef(null);
 
-  const { token, tokenData, logOut, logIn } = useContext(AuthContext);
+  const currentUser = authService.getCurrentUser();
 
-  // ✅ Extract user info
-  const username =
-    profile?.preferred_username ||
-    tokenData?.preferred_username ||
-    tokenData?.email ||
-    "User";
-
-  const fullName =
-    profile?.given_name && profile?.family_name
-      ? `${profile.given_name} ${profile.family_name}`
-      : "";
-
-  const department = profile?.department || "";
-  const designation = profile?.designation || "";
-
-  console.log("User fullName:", fullName);
-  console.log("User department:", department);
-  console.log("User designation:", designation);
-
-  // ✅ Pick the correct clientId roles (change this to your portal client)
-  const clientId = "oauth2-edc-client"; // or "oauth2-empower-client"
-  const roles = tokenData?.resource_access?.[clientId]?.roles || [];
-  const isAdmin = roles.includes("Admin"); // keycloak roles are case-sensitive
-
-  console.log("User roles:", roles);
-  console.log("User isAdmin:", isAdmin);
-  console.log("User token:", token);
+  const handleLogout = () => {
+    authService.logout();
+    navigate("/login");
+  };
 
   useEffect(() => {
     setAnimate(true);
@@ -48,32 +24,6 @@ export default function Header() {
     document.addEventListener("mousedown", outside);
     return () => document.removeEventListener("mousedown", outside);
   }, []);
-
-  // ✅ Fetch Keycloak UserInfo endpoint when token changes
-  useEffect(() => {
-    if (token) {
-      fetch(
-        "http://localhost:8443/realms/oauth2-empower-realm/protocol/openid-connect/userinfo",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("UserInfo from Keycloak:", data);
-          setProfile(data);
-        })
-        .catch((err) => console.error("Failed to fetch userinfo:", err));
-    }
-  }, [token]);
-
-  // ✅ Logout and immediately login again
-  const handleLogoutAndLogin = async () => {
-    await logOut({
-      redirectUri: window.location.origin,
-    });
-    logIn();
-  };
 
   return (
     <nav
@@ -89,10 +39,10 @@ export default function Header() {
 
       <div className="relative flex items-center gap-2" ref={ref}>
         <span className="hidden sm:block text-sm">
-          Welcome, {fullName} ({department})
+          Welcome, {currentUser?.firstName} ({currentUser?.department})
         </span>
 
-        <button
+        <button type="button"
           onClick={() => setOpen((o) => !o)}
           className="hover:text-gray-200"
         >
@@ -107,7 +57,7 @@ export default function Header() {
 
         {open && (
           <div className="absolute right-0 top-10 w-40 bg-white text-black rounded shadow-lg border z-50 text-sm">
-            {isAdmin && (
+            {currentUser?.roles?.includes("Admin") && (
               <>
                 <div className="px-4 py-2 text-gray-600 font-semibold text-xs">
                   User Management
@@ -116,27 +66,59 @@ export default function Header() {
                 <button
                   onClick={() => {
                     setOpen(false);
-                    nav("/roletable");
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                >
-                  Role
-                </button>
-                <hr />
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    nav("/userTable");
+                    navigate("/userTable");
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   User
                 </button>
                 <hr />
+                <div className="px-4 py-2 text-gray-600 font-semibold text-xs">
+                  Master
+                </div>
+                <hr />
+                 <button
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/roletable");
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  Role
+                </button>
+                <hr />
+                 <button
+                  onClick={() => { setOpen(false); navigate("/admin/dept"); }}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  Department
+                </button>
+                <hr />
+                 <button
+                  onClick={() => { setOpen(false); navigate("/admin/designation"); }}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  Designation
+                </button>
+                <hr />
+                 <button
+                  onClick={() => { setOpen(false); navigate("/admin/location"); }}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  Location
+                </button>
+                <hr />
+                 <button
+                  onClick={() => { setOpen(false); navigate("/admin/status"); }}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  Status
+                </button>
+                <hr />
               </>
             )}
             <button
-              onClick={handleLogoutAndLogin}
+              onClick={handleLogout}
               className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
             >
               Sign Out

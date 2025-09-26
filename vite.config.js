@@ -7,11 +7,15 @@ export default defineConfig({
   base: '/EmpowerEdge/',
   plugins: [react(),
     tailwindcss()
-  ], server: {
+  ],
+  server: {
     port: 5173, // Optional: customize port
+    proxy: {
+      '/api': {
+        target: 'http://localhost:9080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
+      },
+    },
   },
- 
 })
-
-
-

@@ -1,49 +1,56 @@
-// RoleTable.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash } from "react-icons/fi";
-import { getRoles, addRole, updateRole, deleteRole } from "../../services/api";
+import { getLocations, addLocation, updateLocation, deleteLocation } from "../../services/api";
 
-export default function RoleTable() {
-  const [roles, setRoles] = useState([]);
+export default function LocationTable() {
+  const [locations, setLocations] = useState([]);
   const [mode, setMode] = useState(null); // "add-inline" | "edit-inline" | null
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ roleName: "" });
+  const [form, setForm] = useState({ locationName: "" });
   const navigate = useNavigate();
 
+  // Load list on mount
   useEffect(() => {
-    getRoles().then(r => setRoles(r.data));
-  }, []);
+    getLocations().then((r) => setLocations(r.data));
+  }, []); // basic fetch-once admin table pattern
 
+  // Create
   async function add() {
-    const { data } = await addRole(form);
-    setRoles(r => [...r, data]);
+    const payload = { locationName: form.locationName?.trim() ?? "" };
+    if (!payload.locationName) return;
+    const { data } = await addLocation(payload);
+    setLocations((prev) => [...prev, data]);
     close();
-  }
+  } // append after POST
 
+  // Update
   async function save() {
-    const { data } = await updateRole(editing.id, form);
-    setRoles(r => r.map(x => (x.id === data.id ? data : x)));
+    if (!editing) return;
+    const payload = { locationName: form.locationName?.trim() ?? "", id: editing.id };
+    if (!payload.locationName) return;
+    const { data } = await updateLocation(editing.id, payload);
+    setLocations((prev) => prev.map((x) => (x.id === data.id ? data : x)));
     close();
-  }
+  } // immutable update by id
 
+  // Delete
   async function remove(id) {
-    if (!window.confirm("Delete this role?")) return;
-    await deleteRole(id);
-    setRoles(r => r.filter(x => x.id !== id));
-  }
+    if (!window.confirm("Delete this location?")) return;
+    await deleteLocation(id);
+    setLocations((prev) => prev.filter((x) => x.id !== id));
+  } // optimistic UI delete
 
+  // Mode helpers
   function openAddInline() {
-    setForm({ roleName: "" });
+    setForm({ locationName: "" });
     setMode("add-inline");
   }
-
-  function openEditInline(r) {
-    setEditing(r);
-    setForm({ roleName: r.roleName });
+  function openEditInline(row) {
+    setEditing(row);
+    setForm({ locationName: row.locationName });
     setMode("edit-inline");
   }
-
   function close() {
     setMode(null);
     setEditing(null);
@@ -53,33 +60,33 @@ export default function RoleTable() {
     <div className="overflow-x-auto">
       <React.Fragment>
         <div className="flex justify-between mb-1 mt-8">
-          <h2 className="text-xl font-bold">Roles</h2>
+          <h2 className="text-xl font-bold">Locations</h2>
           <div className="flex gap-2">
             <button onClick={() => navigate(-1)} className="btn-primary">Back</button>
-            <button onClick={openAddInline} className="btn-primary">Add Role</button>
+            <button onClick={openAddInline} className="btn-primary">Add</button>
           </div>
         </div>
-
-        <table className="table"> {/* This table now uses .table CSS */}
+        <table className="table"> {/* Same look-and-feel as Roles table via .table class */}
           <thead>
             <tr>
               <th>ID</th>
-              <th>Role Name</th>
+              <th>Location Name</th>
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
-            {/* Inline row for adding */}
+            {/* Inline add row */}
             {mode === "add-inline" && (
               <tr>
                 <td>—</td>
                 <td>
                   <input
-                    value={form.roleName}
-                    onChange={e => setForm({ roleName: e.target.value })}
-                    placeholder="New role name"
+                    value={form.locationName}
+                    onChange={(e) => setForm({ locationName: e.target.value })}
+                    placeholder="New location name"
                     className="input"
-                    onClick={e => {
+                    onClick={(e) => {
                       e.stopPropagation();
                       e.nativeEvent.stopImmediatePropagation();
                     }}
@@ -94,17 +101,17 @@ export default function RoleTable() {
               </tr>
             )}
 
-            {/* Existing roles with inline editing */}
-            {roles.map(r =>
-              mode === "edit-inline" && editing?.id === r.id ? (
-                <tr key={r.id}>
-                  <td>{r.id}</td>
+            {/* Data rows with inline edit */}
+            {locations.map((l) =>
+              mode === "edit-inline" && editing?.id === l.id ? (
+                <tr key={l.id}>
+                  <td>{l.id}</td>
                   <td>
                     <input
-                      value={form.roleName}
-                      onChange={e => setForm({ roleName: e.target.value })}
+                      value={form.locationName}
+                      onChange={(e) => setForm({ locationName: e.target.value })}
                       className="input"
-                      onClick={e => {
+                      onClick={(e) => {
                         e.stopPropagation();
                         e.nativeEvent.stopImmediatePropagation();
                       }}
@@ -118,20 +125,20 @@ export default function RoleTable() {
                   </td>
                 </tr>
               ) : (
-                <tr key={r.id}>
-                  <td>{r.id}</td>
-                  <td>{r.roleName}</td>
+                <tr key={l.id}>
+                  <td>{l.id}</td>
+                  <td>{l.locationName}</td>
                   <td>
                     <div className="flex gap-3">
                       <button
-                        onClick={() => openEditInline(r)}
+                        onClick={() => openEditInline(l)}
                         className="p-1 rounded-full bg-green-100 text-green-700 hover:bg-green-200"
                         title="Edit"
                       >
                         <FiEdit size={18} />
                       </button>
                       <button
-                        onClick={() => remove(r.id)}
+                        onClick={() => remove(l.id)}
                         className="p-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200"
                         title="Delete"
                       >

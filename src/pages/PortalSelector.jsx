@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
 import React from "react";
 
 const portals = [
@@ -23,14 +22,30 @@ const portals = [
     ),
     description: "Engine Development Center.",
     // instead of route inside same app → full URL
-    url: "http://localhost:5174/"
+    url: "http://localhost:5175/"
   },
   { name: "Samadhan", icon: "🛠️", description: "Centralised issue-resolution portal.", disabled: true },
   { name: "Timesheet", icon: "⏱️", description: "Track and manage your work hours.", disabled: true }
 ];
 
+import { useEffect } from 'react';
+import { getToken } from '../services/authService';
+import { jwtDecode } from "jwt-decode";
+
 export default function PortalSelector() {
   const nav = useNavigate();
+
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        console.log('JWT Token Details:', decodedToken);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    }
+  }, []);
 
   const handleClick = (p) => {
     if (p.disabled) return;
@@ -44,12 +59,10 @@ export default function PortalSelector() {
   };
 
   return (
-    <div>
-      <Header />
-      <main className="max-w-6xl pt-7 my-4 mx-auto text-center">
-        <p className="text-gray-600 text-3xl font-medium mb-12">
-          Choose where you want to begin your work.
-        </p>
+    <main className="max-w-6xl pt-7 my-4 mx-auto text-center">
+      <p className="text-gray-600 text-3xl font-medium mb-12">
+        Choose where you want to begin your work.
+      </p>
         <div className="grid gap-10 pt-4 sm:grid-cols-2 lg:grid-cols-3">
           {portals.map((p) => (
             <div
@@ -85,6 +98,5 @@ export default function PortalSelector() {
           ))}
         </div>
       </main>
-    </div>
   );
 }

@@ -1,50 +1,81 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
-import api from "../../api";
-import Header from "../../components/Header";
+import { usersApi, rolesApi, departmentsApi, designationsApi, statusesApi } from "../../services/masterService"; // Import all necessary APIs
 
 export default function UserTable() {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [designations, setDesignations] = useState([]);
+  const [statuses, setStatuses] = useState([]);
   const [mode, setMode] = useState(null);
   const [editing, setEditing] = useState(null);
 
   const empty = {
     empCode: "", name: "", email: "", contactNo: "",
     firstName: "", middleName: "", lastName: "",
-    status: "", superior: "", departmentName: "",
-    designation: "", hrbpName: "", originated: "",
-    role: { id: "" },
+    statusId: "", superiorId: "", departmentId: "",
+    designationId: "", hrbpId: "", originated: "",
+    roleIds: [], // Initialize as an empty array for multiple roles
   };
   const [form, setForm] = useState(empty);
   const navigate = useNavigate();
 
   useEffect(() => {
-    Promise.all([api.get("/users"), api.get("/roles")])
-      .then(([u, r]) => {
+    Promise.all([
+      usersApi.getAll(),
+      rolesApi.getAll(),
+      departmentsApi.getAll(),
+      designationsApi.getAll(),
+      statusesApi.getAll(),
+    ])
+      .then(([u, r, d, de, s]) => {
+        console.log("Fetched Users:", u.data);
+        console.log("Fetched Roles:", r.data);
+        console.log("Fetched Departments:", d.data);
+        console.log("Fetched Designations:", de.data);
+        console.log("Fetched Statuses:", s.data);
         setUsers(u.data);
         setRoles(r.data);
+        setDepartments(d.data);
+        setDesignations(de.data);
+        setStatuses(s.data);
+      })
+      .catch(error => {
+        console.error("Error fetching master data:", error);
       });
   }, []);
 
   async function add() {
-    const payload = { ...form, role: { id: +form.role.id } };
-    const { data } = await api.post("/users", payload);
+    const payload = {
+      ...form,
+      statusId: +form.statusId,
+      departmentId: +form.departmentId,
+      designationId: +form.designationId,
+      roleIds: form.roleIds.map(id => +id), // Convert role IDs to numbers
+    };
+    const { data } = await usersApi.create(payload);
     setUsers(prev => [...prev, data]);
     close();
   }
 
   async function save() {
-    const payload = { ...form, role: { id: +form.role.id } };
-    const { data } = await api.put(`/users/${editing.id}`, payload);
+    const payload = {
+      ...form,
+      statusId: +form.statusId,
+      departmentId: +form.departmentId,
+      designationId: +form.designationId,
+      roleIds: form.roleIds.map(id => +id), // Convert role IDs to numbers
+    };
+    const { data } = await usersApi.update(editing.id, payload);
     setUsers(prev => prev.map(u => (u.id === data.id ? data : u)));
     close();
   }
 
   async function remove(id) {
     if (!window.confirm("Delete user?")) return;
-    await api.delete(`/users/${id}`);
+    await usersApi.remove(id);
     setUsers(prev => prev.filter(u => u.id !== id));
   }
 
@@ -55,7 +86,16 @@ export default function UserTable() {
 
   function openEditInline(user) {
     setEditing(user);
-    setForm({ ...empty, ...user, role: { id: user.role?.id || "" } });
+    setForm({
+      ...empty,
+      ...user,
+      statusId: user.status?.id || "",
+      superiorId: user.superior?.id || "",
+      hrbpId: user.hrbp?.id || "",
+      departmentId: user.department?.id || "",
+      designationId: user.designation?.id || "",
+      roleIds: user.roles?.map(r => r.id) || [], // Extract role IDs into an array
+    });
     setMode("edit-inline");
   }
 
@@ -66,20 +106,19 @@ export default function UserTable() {
 
   return (
     <div className="overflow-x-auto">
-      <Header />
-      <div className="flex justify-between mt-8 mb-1">
-        <h2 className="text-xl font-bold">User Management</h2>
-        <div className="flex gap-2">
-          <button onClick={() => navigate(-1)} className="btn-primary">Back</button>
-          <button onClick={openAddInline} className="btn-primary">Add User</button>
+      <React.Fragment>
+        <div className="flex justify-between mt-8 mb-1">
+          <h2 className="text-xl font-bold">User Management</h2>
+          <div className="flex gap-2">
+            <button onClick={() => navigate(-1)} className="btn-primary">Back</button>
+            <button onClick={openAddInline} className="btn-primary">Add User</button>
+          </div>
         </div>
-      </div>
-
-      <table className="table text-xs overflow-auto">
-        <thead>
-          <tr>
-            {[
-              "ID", "Emp Code", "Name", "Email", "Contact",
+        <table className="table text-xs overflow-auto"> {/* User Management Table */}
+          <thead>
+            <tr>
+              {[
+                "ID", "Emp Code", "Name", "Email", "Contact",
               "First", "Middle", "Last", "Status", "Superior",
               "Department", "Designation", "HRBP", "Originated",
               "Role", "Actions"
@@ -99,15 +138,30 @@ export default function UserTable() {
               <td className="p-2 border"><input type="text" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} className="input" /></td>
               <td className="p-2 border"><input type="text" value={form.middleName} onChange={e => setForm(f => ({ ...f, middleName: e.target.value }))} className="input" /></td>
               <td className="p-2 border"><input type="text" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} className="input" /></td>
-              <td className="p-2 border"><input type="text" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="input" /></td>
-              <td className="p-2 border"><input type="text" value={form.superior} onChange={e => setForm(f => ({ ...f, superior: e.target.value }))} className="input" /></td>
-              <td className="p-2 border"><input type="text" value={form.departmentName} onChange={e => setForm(f => ({ ...f, departmentName: e.target.value }))} className="input" /></td>
-              <td className="p-2 border"><input type="text" value={form.designation} onChange={e => setForm(f => ({ ...f, designation: e.target.value }))} className="input" /></td>
-              <td className="p-2 border"><input type="text" value={form.hrbpName} onChange={e => setForm(f => ({ ...f, hrbpName: e.target.value }))} className="input" /></td>
+              <td className="p-2 border">
+                <select value={form.statusId} onChange={e => setForm(f => ({ ...f, statusId: e.target.value }))} className="input">
+                  <option value="">-- Select Status --</option>
+                  {statuses.map(s => <option key={s.id} value={s.id}>{s.statusName}</option>)}
+                </select>
+              </td>
+              <td className="p-2 border"><input type="text" value={form.superiorId} onChange={e => setForm(f => ({ ...f, superiorId: e.target.value }))} className="input" /></td>
+              <td className="p-2 border">
+                <select value={form.departmentId} onChange={e => setForm(f => ({ ...f, departmentId: e.target.value }))} className="input">
+                  <option value="">-- Select Department --</option>
+                  {departments.map(d => <option key={d.id} value={d.id}>{d.departmentName}</option>)}
+                </select>
+              </td>
+              <td className="p-2 border">
+                <select value={form.designationId} onChange={e => setForm(f => ({ ...f, designationId: e.target.value }))} className="input">
+                  <option value="">-- Select Designation --</option>
+                  {designations.map(d => <option key={d.id} value={d.id}>{d.designationName}</option>)}
+                </select>
+              </td>
+              <td className="p-2 border"><input type="text" value={form.hrbpId} onChange={e => setForm(f => ({ ...f, hrbpId: e.target.value }))} className="input" /></td>
               <td className="p-2 border"><input type="date" value={form.originated} onChange={e => setForm(f => ({ ...f, originated: e.target.value }))} className="input" /></td>
               <td className="p-2 border">
-                <select value={form.role.id} onChange={e => setForm(f => ({ ...f, role: { id: e.target.value } }))} className="input">
-                  <option value="">-- Select Role --</option>
+                <select multiple value={form.roleIds} onChange={e => setForm(f => ({ ...f, roleIds: Array.from(e.target.selectedOptions, option => option.value) }))} className="input">
+                  <option value="">-- Select Role(s) --</option>
                   {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
                 </select>
               </td>
@@ -129,15 +183,30 @@ export default function UserTable() {
                 <td className="p-2 border"><input type="text" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="text" value={form.middleName} onChange={e => setForm(f => ({ ...f, middleName: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="text" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="text" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="text" value={form.superior} onChange={e => setForm(f => ({ ...f, superior: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="text" value={form.departmentName} onChange={e => setForm(f => ({ ...f, departmentName: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="text" value={form.designation} onChange={e => setForm(f => ({ ...f, designation: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="text" value={form.hrbpName} onChange={e => setForm(f => ({ ...f, hrbpName: e.target.value }))} className="input" /></td>
+                <td className="p-2 border">
+                  <select value={form.statusId} onChange={e => setForm(f => ({ ...f, statusId: e.target.value }))} className="input">
+                    <option value="">-- Select Status --</option>
+                    {statuses.map(s => <option key={s.id} value={s.id}>{s.statusName}</option>)}
+                  </select>
+                </td>
+                <td className="p-2 border"><input type="text" value={form.superiorId} onChange={e => setForm(f => ({ ...f, superiorId: e.target.value }))} className="input" /></td>
+                <td className="p-2 border">
+                  <select value={form.departmentId} onChange={e => setForm(f => ({ ...f, departmentId: e.target.value }))} className="input">
+                    <option value="">-- Select Department --</option>
+                    {departments.map(d => <option key={d.id} value={d.id}>{d.departmentName}</option>)}
+                  </select>
+                </td>
+                <td className="p-2 border">
+                  <select value={form.designationId} onChange={e => setForm(f => ({ ...f, designationId: e.target.value }))} className="input">
+                    <option value="">-- Select Designation --</option>
+                    {designations.map(d => <option key={d.id} value={d.id}>{d.designationName}</option>)}
+                  </select>
+                </td>
+                <td className="p-2 border"><input type="text" value={form.hrbpId} onChange={e => setForm(f => ({ ...f, hrbpId: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="date" value={form.originated} onChange={e => setForm(f => ({ ...f, originated: e.target.value }))} className="input" /></td>
                 <td className="p-2 border">
-                  <select value={form.role.id} onChange={e => setForm(f => ({ ...f, role: { id: e.target.value } }))} className="input">
-                    <option value="">-- Select Role --</option>
+                  <select multiple value={form.roleIds} onChange={e => setForm(f => ({ ...f, roleIds: Array.from(e.target.selectedOptions, option => option.value) }))} className="input">
+                    <option value="">-- Select Role(s) --</option>
                     {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
                   </select>
                 </td>
@@ -156,13 +225,13 @@ export default function UserTable() {
                 <td className="p-2 border">{u.firstName}</td>
                 <td className="p-2 border">{u.middleName}</td>
                 <td className="p-2 border">{u.lastName}</td>
-                <td className="p-2 border">{u.status}</td>
-                <td className="p-2 border">{u.superior}</td>
-                <td className="p-2 border">{u.departmentName}</td>
-                <td className="p-2 border">{u.designation}</td>
-                <td className="p-2 border">{u.hrbpName}</td>
+                <td className="p-2 border">{u.status?.statusName}</td>
+                <td className="p-2 border">{u.superior?.userName}</td>
+                <td className="p-2 border">{u.department?.departmentName}</td>
+                <td className="p-2 border">{u.designation?.designationName}</td>
+                <td className="p-2 border">{u.hrbp?.userName}</td>
                 <td className="p-2 border">{u.originated}</td>
-                <td className="p-2 border">{u.role?.roleName}</td>
+                <td className="p-2 border">{u.roles?.map(r => r.roleName).join(', ')}</td>
                 <td className="p-2 border flex gap-2">
                   <button
                     onClick={() => openEditInline(u)}
@@ -184,6 +253,7 @@ export default function UserTable() {
           ))}
         </tbody>
       </table>
+      </React.Fragment>
     </div>
   );
 }
