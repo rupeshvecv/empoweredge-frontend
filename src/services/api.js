@@ -13,7 +13,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export const getDepartments = () => api.get("/empoweredge/departments");
+export const getDepartments = () => getDepartments();
 export const getDepartmentById = (id) => api.get(`/empoweredge/department/${id}`);
 export const addDepartment = (department) => api.post("/empoweredge/department", department);
 export const updateDepartment = (id, department) => api.put(`/empoweredge/department/${id}`, department);

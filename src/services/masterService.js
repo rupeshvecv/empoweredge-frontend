@@ -6,41 +6,41 @@ export const getMasters = async () => {
 };
 
 export const usersApi = {
-  getAll: () => api.get("/users"),
-  getById: (id) => api.get(`/users/${id}`),
-  create: (data) => api.post("/users", data),
-  update: (id, data) => api.put(`/users/${id}`, data),
-  remove: (id) => api.delete(`/users/${id}`),
+  getAllUsers: () => api.get("/empoweredge/users"),
+  getUserById: (id) => api.get(`/empoweredge/users/${id}`),
+  createUser: (data) => api.post("/empoweredge/users", data),
+  updateUser: (id, data) => api.put(`/empoweredge/users/${id}`, data),
+  removeUser: (id) => api.delete(`/empoweredge/users/${id}`),
 };
 
 export const departmentsApi = {
-  getAll: () => api.get("/empoweredge/departments"),
-  getById: (id) => api.get(`/empoweredge/department/${id}`),
-  create: (data) => api.post("/empoweredge/department", data),
-  update: (id, data) => api.put(`/empoweredge/department/${id}`, data),
-  remove: (id) => api.delete(`/empoweredge/department/${id}`),
+  getAllDepartments: () => api.get("/empoweredge/departments"),
+  getDepartmentById: (id) => api.get(`/empoweredge/department/${id}`),
+  createDepartment: (data) => api.post("/empoweredge/department", data),
+  updateDepartment: (id, data) => api.put(`/empoweredge/department/${id}`, data),
+  removeDepartment: (id) => api.delete(`/empoweredge/department/${id}`),
 };
 
 export const rolesApi = {
-  getAll: () => api.get("/empoweredge/roles"),
-  getById: (id) => api.get(`/empoweredge/roles/${id}`),
-  create: (data) => api.post("/empoweredge/roles", data),
-  update: (id, data) => api.put(`/empoweredge/roles/${id}`, data),
-  remove: (id) => api.delete(`/empoweredge/roles/${id}`),
+  getAllRoles: () => api.get("/empoweredge/roles"),
+  getRoleById: (id) => api.get(`/empoweredge/roles/${id}`),
+  createRole: (data) => api.post("/empoweredge/roles", data),
+  updateRole: (id, data) => api.put(`/empoweredge/roles/${id}`, data),
+  removeRole: (id) => api.delete(`/empoweredge/roles/${id}`),
 };
 
 export const designationsApi = {
-  getAll: () => api.get("/empoweredge/designations"),
-  getById: (id) => api.get(`/empoweredge/designation/${id}`),
-  create: (data) => api.post("/empoweredge/designation", data),
-  update: (id, data) => api.put(`/empoweredge/designation/${id}`, data),
-  remove: (id) => api.delete(`/empoweredge/designation/${id}`),
+  getAllDesignations: () => api.get("/empoweredge/designations"),
+  getDesignationById: (id) => api.get(`/empoweredge/designation/${id}`),
+  createDesignation: (data) => api.post("/empoweredge/designation", data),
+  updateDesignation: (id, data) => api.put(`/empoweredge/designation/${id}`, data),
+  removeDesignation: (id) => api.delete(`/empoweredge/designation/${id}`),
 };
 
 export const statusesApi = {
-  getAll: () => api.get("/empoweredge/statuss"),
-  getById: (id) => api.get(`/empoweredge/status/${id}`),
-  create: (data) => api.post("/empoweredge/status", data),
-  update: (id, data) => api.put(`/empoweredge/status/${id}`, data),
-  remove: (id) => api.delete(`/empoweredge/status/${id}`),
+  getAllStatuses: () => api.get("/empoweredge/statuss"),
+  getStatusById: (id) => api.get(`/empoweredge/status/${id}`),
+  createStatus: (data) => api.post("/empoweredge/status", data),
+  updateStatus: (id, data) => api.put(`/empoweredge/status/${id}`, data),
+  removeStatus: (id) => api.delete(`/empoweredge/status/${id}`),
 };

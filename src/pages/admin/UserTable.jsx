@@ -13,9 +13,9 @@ export default function UserTable() {
   const [editing, setEditing] = useState(null);
 
   const empty = {
-    empCode: "", name: "", email: "", contactNo: "",
+    empCode: "", userName: "", email: "", contactNo: "",
     firstName: "", middleName: "", lastName: "",
-    statusId: "", superiorId: "", departmentId: "",
+    status:"", superiorId: "", departmentId: "",
     designationId: "", hrbpId: "", originated: "",
     roleIds: [], // Initialize as an empty array for multiple roles
   };
@@ -24,11 +24,11 @@ export default function UserTable() {
 
   useEffect(() => {
     Promise.all([
-      usersApi.getAll(),
-      rolesApi.getAll(),
-      departmentsApi.getAll(),
-      designationsApi.getAll(),
-      statusesApi.getAll(),
+      usersApi.getAllUsers(),
+      rolesApi.getAllRoles(),
+      departmentsApi.getAllDepartments(),
+      designationsApi.getAllDesignations(),
+      statusesApi.getAllStatuses(),
     ])
       .then(([u, r, d, de, s]) => {
         console.log("Fetched Users:", u.data);
@@ -55,7 +55,7 @@ export default function UserTable() {
       designationId: +form.designationId,
       roleIds: form.roleIds.map(id => +id), // Convert role IDs to numbers
     };
-    const { data } = await usersApi.create(payload);
+    const { data } = await usersApi.createUser(payload);
     setUsers(prev => [...prev, data]);
     close();
   }
@@ -68,14 +68,14 @@ export default function UserTable() {
       designationId: +form.designationId,
       roleIds: form.roleIds.map(id => +id), // Convert role IDs to numbers
     };
-    const { data } = await usersApi.update(editing.id, payload);
+ const { data } = await usersApi.updateUser(editing.id, payload);
     setUsers(prev => prev.map(u => (u.id === data.id ? data : u)));
     close();
   }
 
   async function remove(id) {
     if (!window.confirm("Delete user?")) return;
-    await usersApi.remove(id);
+    await usersApi.removeUser(id);
     setUsers(prev => prev.filter(u => u.id !== id));
   }
 
@@ -118,10 +118,10 @@ export default function UserTable() {
           <thead>
             <tr>
               {[
-                "ID", "Emp Code", "Name", "Email", "Contact",
-              "First", "Middle", "Last", "Status", "Superior",
+                "ID", "Emp Code", "userName", "Email", "contactNo",
+              "firstName", "middleName", "lastName", "Status", "Superior",
               "Department", "Designation", "HRBP", "Originated",
-              "Role", "Actions"
+              "roles", "Actions"
             ].map(h => (
               <th key={h} className="p-2 border">{h}</th>
             ))}
@@ -132,7 +132,7 @@ export default function UserTable() {
             <tr>
               <td className="p-2 border">—</td>
               <td className="p-2 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input" /></td>
-              <td className="p-2 border"><input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="input" /></td>
+              <td className="p-2 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input" /></td>
               <td className="p-2 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" /></td>
               <td className="p-2 border"><input type="text" value={form.contactNo} onChange={e => setForm(f => ({ ...f, contactNo: e.target.value }))} className="input" /></td>
               <td className="p-2 border"><input type="text" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} className="input" /></td>
@@ -177,7 +177,7 @@ export default function UserTable() {
               <tr key={u.id} className="bg-yellow-50">
                 <td className="p-2 border">{u.id}</td>
                 <td className="p-2 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="input" /></td>
+                <td className="p-2 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="text" value={form.contactNo} onChange={e => setForm(f => ({ ...f, contactNo: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="text" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} className="input" /></td>
@@ -193,7 +193,7 @@ export default function UserTable() {
                 <td className="p-2 border">
                   <select value={form.departmentId} onChange={e => setForm(f => ({ ...f, departmentId: e.target.value }))} className="input">
                     <option value="">-- Select Department --</option>
-                    {departments.map(d => <option key={d.id} value={d.id}>{d.departmentName}</option>)}
+                    {departments.map(s => <option key={s.id} value={s.id}>{s.departmentName}</option>)}
                   </select>
                 </td>
                 <td className="p-2 border">
@@ -219,7 +219,7 @@ export default function UserTable() {
               <tr key={u.id}>
                 <td className="p-2 border">{u.id}</td>
                 <td className="p-2 border">{u.empCode}</td>
-                <td className="p-2 border">{u.name}</td>
+                <td className="p-2 border">{u.userName}</td>
                 <td className="p-2 border">{u.email}</td>
                 <td className="p-2 border">{u.contactNo}</td>
                 <td className="p-2 border">{u.firstName}</td>
