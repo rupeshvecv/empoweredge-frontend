@@ -13,6 +13,11 @@ export const usersApi = {
   removeUser: (id) => api.delete(`/empoweredge/users/${id}`),
 };
 
+export const hrbpApi = {
+  getDistinctHrbpUsersInHR: () => api.get("/empoweredge/users/hrbps"),
+  getActiveUsersByHrbpId: (hrbpId) => api.get(`/empoweredge/users/hrbp/${hrbpId}`),
+};
+
 export const departmentsApi = {
   getAllDepartments: () => api.get("/empoweredge/departments"),
   getDepartmentById: (id) => api.get(`/empoweredge/department/${id}`),
@@ -43,4 +48,12 @@ export const statusesApi = {
   createStatus: (data) => api.post("/empoweredge/status", data),
   updateStatus: (id, data) => api.put(`/empoweredge/status/${id}`, data),
   removeStatus: (id) => api.delete(`/empoweredge/status/${id}`),
+};
+
+export const locationsApi = {
+  getAllLocations: () => api.get("/empoweredge/locations"),
+  getLocationById: (id) => api.get(`/empoweredge/location/${id}`),
+  createLocation: (data) => api.post("/empoweredge/location", data),
+  updateLocation: (id, data) => api.put(`/empoweredge/location/${id}`, data),
+  removeLocation: (id) => api.delete(`/empoweredge/location/${id}`),
 };

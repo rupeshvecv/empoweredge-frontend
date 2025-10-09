@@ -8,7 +8,7 @@ export default function RoleTable() {
   const [roles, setRoles] = useState([]);
   const [mode, setMode] = useState(null); // "add-inline" | "edit-inline" | null
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ roleName: "" });
+  const [form, setForm] = useState({ roleName: "", description: "" }); // Use 'description'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,13 +16,21 @@ export default function RoleTable() {
   }, []);
 
   async function add() {
-    const { data } = await addRole(form);
+    const payload = {
+      roleName: form.roleName,
+      description: form.description, // Use 'description'
+    };
+    const { data } = await addRole(payload);
     setRoles(r => [...r, data]);
     close();
   }
 
   async function save() {
-    const { data } = await updateRole(editing.id, form);
+    const payload = {
+      roleName: form.roleName,
+      description: form.description, // Use 'description'
+    };
+    const { data } = await updateRole(editing.id, payload);
     setRoles(r => r.map(x => (x.id === data.id ? data : x)));
     close();
   }
@@ -34,13 +42,13 @@ export default function RoleTable() {
   }
 
   function openAddInline() {
-    setForm({ roleName: "" });
+    setForm({ roleName: "", description: "" }); // Initialize 'description'
     setMode("add-inline");
   }
 
   function openEditInline(r) {
     setEditing(r);
-    setForm({ roleName: r.roleName });
+    setForm({ roleName: r.roleName, description: r.description || "" }); // Set 'description'
     setMode("edit-inline");
   }
 
@@ -65,6 +73,7 @@ export default function RoleTable() {
             <tr>
               <th>ID</th>
               <th>Role Name</th>
+              <th>Role Description</th> {/* New header */}
               <th>Actions</th>
             </tr>
           </thead>
@@ -76,8 +85,20 @@ export default function RoleTable() {
                 <td>
                   <input
                     value={form.roleName}
-                    onChange={e => setForm({ roleName: e.target.value })}
+                    onChange={e => setForm(f => ({ ...f, roleName: e.target.value }))}
                     placeholder="New role name"
+                    className="input"
+                    onClick={e => {
+                      e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
+                    }}
+                  />
+                </td>
+                <td>
+                  <input
+                    value={form.description}
+                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                    placeholder="Role description"
                     className="input"
                     onClick={e => {
                       e.stopPropagation();
@@ -102,7 +123,18 @@ export default function RoleTable() {
                   <td>
                     <input
                       value={form.roleName}
-                      onChange={e => setForm({ roleName: e.target.value })}
+                      onChange={e => setForm(f => ({ ...f, roleName: e.target.value }))}
+                      className="input"
+                      onClick={e => {
+                        e.stopPropagation();
+                        e.nativeEvent.stopImmediatePropagation();
+                      }}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      value={form.description}
+                      onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                       className="input"
                       onClick={e => {
                         e.stopPropagation();
@@ -121,6 +153,7 @@ export default function RoleTable() {
                 <tr key={r.id}>
                   <td>{r.id}</td>
                   <td>{r.roleName}</td>
+                  <td>{r.description}</td> {/* Display 'description' */}
                   <td>
                     <div className="flex gap-3">
                       <button

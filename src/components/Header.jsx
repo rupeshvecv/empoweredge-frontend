@@ -31,7 +31,9 @@ export default function Header() {
                   bg-gradient-to-r from-[#191970] to-[#000080] transition-transform duration-500
                   ${animate ? "translate-y-0" : "-translate-y-full"}`}
     >
-      <img src={logo} alt="logo" className="h-12 rounded-md shadow-md" />
+      <div onClick={() => navigate("/portalselector")} className="cursor-pointer">
+        <img src={logo} alt="logo" className="h-12 rounded-md shadow-md" />
+      </div>
 
       <span className="absolute left-1/2 -translate-x-1/2 hidden text-2xl sm:block font-bold tracking-wide">
         Empower Edge

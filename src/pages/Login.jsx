@@ -20,7 +20,7 @@ export default function Login() {
       // On successful login, redirect to the portal or a protected page
       navigate('/portalselector');
     } catch (err) {
-      setError('Login failed. Please check your credentials.');
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
       console.error('Login error:', err);
     } finally {
       setLoading(false);
