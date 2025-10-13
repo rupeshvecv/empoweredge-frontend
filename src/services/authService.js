@@ -17,7 +17,7 @@ const fetchUserProfile = async () => {
 
 export const login = async (username, password) => {
   try {
-    const response = await api.post("/auth/login", { userName:username, password });
+    const response = await api.post("/empoweredge/auth/login", { userName:username, password });
     const { token, user } = response.data;
 
     localStorage.setItem('token', token);

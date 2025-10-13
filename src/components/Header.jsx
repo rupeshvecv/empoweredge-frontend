@@ -41,7 +41,7 @@ export default function Header() {
 
       <div className="relative flex items-center gap-2" ref={ref}>
         <span className="hidden sm:block text-sm">
-          Welcome, {currentUser?.firstName} ({currentUser?.department})
+          Welcome, {currentUser?.firstName}{currentUser?.lastName ? ` ${currentUser.lastName}` : ''} ({currentUser?.department})
         </span>
 
         <button type="button"

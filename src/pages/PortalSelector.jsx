@@ -22,7 +22,7 @@ const portals = [
     ),
     description: "Engine Development Center.",
     // instead of route inside same app → full URL
-    url: "http://localhost:5175/"
+    url: "/EDC/"
   },
   { name: "Samadhan", icon: "🛠️", description: "Centralised issue-resolution portal.", disabled: true },
   { name: "Timesheet", icon: "⏱️", description: "Track and manage your work hours.", disabled: true }
