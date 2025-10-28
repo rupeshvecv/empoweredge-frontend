@@ -60,28 +60,64 @@ export default function UserTable() {
       locationsApi.getAllLocations(),
     ])
       .then(([u, r, d, de, s, l]) => {
-        console.log("Departments:", d.data);
-        console.log("Designations:", de.data);
-        setAllUsers(u.data); // Set all fetched users
-        setRoles(r.data);
-        setDepartments(d.data);
-        setDesignations(de.data);
-        setStatuses(s.data);
-        setLocations(l.data);
+        // Extract raw data
+        const usersData = u.data || [];
+        const rolesData = r.data || [];
+        const departmentsData = d.data || [];
+        const designationsData = de.data || [];
+        const statusesData = s.data || [];
+        const locationsData = l.data || [];
 
-        // Find the HRBP department ID
-        const hrbpDepartment = d.data.find(dept => dept.departmentName === "HRBP");
+        // Build lookup maps to avoid O(n*m) finds during render
+        const makeMap = (arr, key = 'id', val = null) => {
+          const map = {};
+          (arr || []).forEach(item => {
+            const k = item[key];
+            map[k] = val ? item[val] : item;
+          });
+          return map;
+        };
+
+        const statusMap = makeMap(statusesData, 'id', 'statusName');
+        const deptMap = makeMap(departmentsData, 'id', 'departmentName');
+        const desigMap = makeMap(designationsData, 'id', 'designationName');
+        const locMap = makeMap(locationsData, 'id', 'locationName');
+        const usersMap = makeMap(usersData, 'id', 'userName');
+        const rolesMap = makeMap(rolesData, 'id', 'roleName');
+
+        // Enrich users with display-friendly fields so rendering is fast
+        const enrichedUsers = (usersData || []).map(user => {
+          const roleIds = Array.isArray(user.roleIds) ? user.roleIds.map(Number) : (user.roleIds ? [Number(user.roleIds)] : []);
+          return {
+            ...user,
+            statusName: statusMap[user.statusId] || '',
+            departmentName: deptMap[user.departmentId] || '',
+            superiorName: usersMap[user.superiorId] || '',
+            designationName: desigMap[user.designationId] || '',
+            hrbpName: usersMap[user.hrbpId] || '',
+            roleNames: roleIds.map(id => rolesMap[id]).filter(Boolean).join(', '),
+            locationName: locMap[user.location] || '',
+            originatedStr: user.originated ? new Date(user.originated).toLocaleString() : '',
+          };
+        });
+
+        setAllUsers(enrichedUsers); // Set enriched users
+        setRoles(rolesData);
+        setDepartments(departmentsData);
+        setDesignations(designationsData);
+        setStatuses(statusesData);
+        setLocations(locationsData);
+
+        // Find the HRBP department ID and HRBP users (from departmentsData)
+        const hrbpDepartment = departmentsData.find(dept => dept.departmentName === "HRBP");
         if (hrbpDepartment) {
-          // Filter all users to find those belonging to the HRBP department
-          const hrbpUsersFiltered = u.data.filter(user => user.departmentId === hrbpDepartment.id);
+          const hrbpUsersFiltered = enrichedUsers.filter(user => user.departmentId === hrbpDepartment.id);
           setHrbpUsers(hrbpUsersFiltered);
-          console.log("Filtered HRBP Users:", hrbpUsersFiltered);
         } else {
           setHrbpUsers([]);
-          console.log("HRBP department not found.");
         }
 
-        updateDisplayedUsers(u.data, currentPage); // Initialize displayed users
+        updateDisplayedUsers(enrichedUsers, currentPage); // Initialize displayed users
       })
       .catch(error => {
         console.error("Error fetching master data:", error);
@@ -277,18 +313,6 @@ export default function UserTable() {
                 <td className="p-2 border"><input type="date" value={form.originated} onChange={e => setForm(f => ({ ...f, originated: e.target.value }))} className="input" /></td>
                  <td className="p-2 border">
                   <select
-                    value={form.location}
-                    onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                    className="input"
-                  >
-                    <option value="">-- Select Location --</option>
-                    {locations.map(loc => (
-                      <option key={loc.id} value={loc.id}>{loc.locationName}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="p-2 border">
-                  <select
                     multiple
                     value={form.roleIds}
                     onChange={e =>
@@ -302,6 +326,18 @@ export default function UserTable() {
                     {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
                   </select>
                 </td>
+                 <td className="p-2 border">
+                  <select
+                    value={form.location}
+                    onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                    className="input"
+                  >
+                    <option value="">-- Select Location --</option>
+                    {locations.map(loc => (
+                      <option key={loc.id} value={loc.id}>{loc.locationName}</option>
+                    ))}
+                  </select>
+                </td>
 
                 <td className="p-2 border"><input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input" /></td>
@@ -312,12 +348,7 @@ export default function UserTable() {
               </tr>
             )}
 
-            {users.map(u => {
-              // Log the statuses array and each user's status value
-              console.log("Statuses array:", statuses);
-              console.log("User status value:", u.status);
-
-              return (
+            {users.map(u => (
                 mode === "edit-inline" && editing?.id === u.id ? (
                   <tr key={u.id} className="bg-yellow-50">
                     <td className="p-2 border">{u.id}</td>
@@ -374,18 +405,6 @@ export default function UserTable() {
                     <td className="p-2 border"><input type="date" value={form.originated} onChange={e => setForm(f => ({ ...f, originated: e.target.value }))} className="input" /></td>
                     <td className="p-2 border">
                       <select
-                        value={form.location}
-                        onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                        className="input"
-                      >
-                        <option value="">-- Select Location --</option>
-                        {locations.map(loc => (
-                          <option key={loc.id} value={loc.id}>{loc.locationName}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="p-2 border">
-                      <select
                         multiple
                         value={form.roleIds}
                         onChange={e =>
@@ -397,6 +416,18 @@ export default function UserTable() {
                         className="input"
                       >
                         {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
+                      </select>
+                    </td>
+                    <td className="p-2 border">
+                      <select
+                        value={form.location}
+                        onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                        className="input"
+                      >
+                        <option value="">-- Select Location --</option>
+                        {locations.map(loc => (
+                          <option key={loc.id} value={loc.id}>{loc.locationName}</option>
+                        ))}
                       </select>
                     </td>
 
@@ -417,70 +448,27 @@ export default function UserTable() {
                     <td className="p-2 border">{u.firstName}</td>
                     <td className="p-2 border">{u.middleName}</td>
                     <td className="p-2 border">{u.lastName}</td>
+                    <td className="p-2 border">{u.statusName}</td>
                     <td className="p-2 border">
-                      {(() => {
-                        const statusId = u.statusId;
-                        const statusObj = statuses.find(s => String(s.id) === String(statusId));
-                        return statusObj ? statusObj.statusName : "";
-                      })()}
+                      {u.departmentName}
                     </td>
                     <td className="p-2 border">
-                      {(() => {
-                        const deptId = u.departmentId;
-                        const deptObj = departments.find(d => String(d.id) === String(deptId));
-                        return deptObj ? deptObj.departmentName : "";
-                      })()}
+                      {u.superiorName}
                     </td>
                     <td className="p-2 border">
-                      {
-                        (() => {
-                          if (!u.superiorId) return "";
-                          const superiorUser = users.find(user => String(user.id) === String(u.superiorId));
-                          return superiorUser ? superiorUser.userName : "";
-                        })()
-                      }
+                      {u.designationName}
                     </td>
                     <td className="p-2 border">
-                      {(() => {
-                        const desigId = u.designationId;
-                        const desigObj = designations.find(d => String(d.id) === String(desigId));
-                        return desigObj ? desigObj.designationName : "";
-                      })()}
+                      {u.hrbpName}
                     </td>
                     <td className="p-2 border">
-                      {
-                        (() => {
-                          if (!u.hrbpId) return ""; // Reverted from HRBPId to hrbpId
-                          const hrbpUser = hrbpUsers.find(user => String(user.id) === String(u.hrbpId)); // Reverted from HRBPId to hrbpId
-                          return hrbpUser ? hrbpUser.userName : "";
-                        })()
-                      }
-                    </td>
-                    <td className="p-2 border">
-                      {(() => {
-                        if (!u.originated) return "";
-                        const dateObj = new Date(u.originated);
-                        const dateStr = dateObj.toLocaleDateString();
-                        const timeStr = dateObj.toLocaleTimeString();
-                        return `${dateStr} ${timeStr}`;
-                      })()}
+                      {u.originatedStr}
                     </td> {/* Originated column */}
                     <td className="p-2 border">
-                      {(() => {
-                        const roleIds = Array.isArray(u.roleIds) ? u.roleIds : [u.roleIds];
-                        const roleNames = roles
-                          .filter(r => roleIds.includes(r.id))
-                          .map(r => r.roleName)
-                          .join(', ');
-                        return roleNames;
-                      })()}
+                      {u.roleNames}
                     </td> {/* Role column */}
                     <td className="p-2 border">
-                      {(() => {
-                        const locationId = u.location;
-                        const locationObj = locations.find(l => String(l.id) === String(locationId));
-                        return locationObj ? locationObj.locationName : "";
-                      })()}
+                      {u.locationName}
                     </td>
                     <td className="p-2 border">
                       {u.profilePic ? (
@@ -508,8 +496,7 @@ export default function UserTable() {
                     </td> {/* Actions column */}
                   </tr>
                 )
-              )
-            })}
+            ))}
           </tbody>
         </table>
         <Pagination
