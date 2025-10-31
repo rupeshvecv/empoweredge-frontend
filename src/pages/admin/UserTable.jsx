@@ -37,7 +37,7 @@ export default function UserTable() {
     originated: "",
     roleIds: [],
     password: "",
-    profilePic: "", // <-- Add profilePic
+    // profilePic: "", // <-- Add profilePic
     location: "",   // <-- Add location
   };
   const [form, setForm] = useState(empty);
@@ -153,7 +153,7 @@ export default function UserTable() {
       empCode: form.empCode,
       userName: form.userName,
       password: form.password,
-      profilePic: form.profilePic || null,
+      // profilePic: form.profilePic || null,
       firstName: form.firstName,
       middleName: form.middleName,
       lastName: form.lastName,
@@ -216,7 +216,7 @@ export default function UserTable() {
       location: user.location || "",
       roleIds: user.roles?.map(r => r.id) || [], // Extract role IDs into an array
       password: user.password || "", // Map password from user object
-      profilePic: user.profilePic || "", // Map profilePic from user object
+      // profilePic: user.profilePic || "", // Map profilePic from user object
     });
     setMode("edit-inline");
   }
@@ -243,7 +243,8 @@ export default function UserTable() {
       "ID", "Emp Code", "userName", "Email", "contactNo",
       "firstName", "middleName", "lastName", "Status", "Department", "Superior",
       "Designation", "HRBP", "Originated", // Reverted hrbp to HRBP
-      "Role", "Location", "Profile Pic", "Password", "Actions" // <-- Added columns
+      "Role", "Location","Password", "Actions", 
+      // "Profile Pic" // <-- Added columns
     ].map(h => (
       <th key={h} className="p-2 border">{h}</th>
     ))}
@@ -431,7 +432,7 @@ export default function UserTable() {
                       </select>
                     </td>
 
-                    <td className="p-2 border"><input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input" /></td>
+                    {/* <td className="p-2 border"><input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input" /></td> */}
                     <td className="p-2 border"><input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input" /></td>
                     <td className="p-2 border flex gap-2">
                       <button onClick={close} className="btn-light">Cancel</button>
@@ -470,11 +471,11 @@ export default function UserTable() {
                     <td className="p-2 border">
                       {u.locationName}
                     </td>
-                    <td className="p-2 border">
+                    {/* <td className="p-2 border">
                       {u.profilePic ? (
                         <img src={u.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
                       ) : ""}
-                    </td>
+                    </td> */}
                     <td className="p-2 border">
                       {u.password ? "••••••••" : ""}
                     </td>
