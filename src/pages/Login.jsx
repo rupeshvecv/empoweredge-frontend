@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService'; // Import the new auth service
+import ForgotPasswordModal from '../components/ForgotPasswordModal';
 
 export default function Login() {
   const [userName, setuserName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -68,7 +70,11 @@ export default function Login() {
               {loading ? 'Logging in...' : 'Sign In'}
             </button>
           </div>
+            <div className="text-right mt-2">
+              <button type="button" className="text-sm text-blue-600 hover:underline" onClick={() => setShowForgotModal(true)}>Forgot password?</button>
+            </div>
         </form>
+        {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
       </div>
     </div>
   );

@@ -1,5 +1,35 @@
 import { jwtDecode } from "jwt-decode"; // Import jwt-decode
-import api from "./api"; // Import the configured axios instance
+import axios from "axios"; // Import axios directly for unauthenticated calls
+import api from "./api"; // Import the configured axios instance for authenticated calls
+
+// Create a separate axios instance for unauthenticated requests (e.g., forgot password)
+const unauthenticatedApi = axios.create({
+  baseURL: "/api", // Use relative path to leverage Vite proxy
+});
+
+// Forgot-password / OTP endpoints
+export const requestPasswordOtp = async (email) => {
+  try {
+    // Backend expects email as request param
+    const res = await unauthenticatedApi.post('/empoweredge/auth/users/password_otp_generate_mail', null, { params: { email } });
+    return res.data;
+  } catch (error) {
+    console.error('requestPasswordOtp failed:', error);
+    throw error;
+  }
+};
+
+// Backend exposes a combined verify+reset endpoint
+export const resetPassword = async (email, otp, newPassword) => {
+  try {
+    // Send as query params since backend maps @RequestParam
+    const res = await unauthenticatedApi.post('/empoweredge/auth/users/verify_otp_reset_password', null, { params: { email, otp, newPassword } });
+    return res.data;
+  } catch (error) {
+    console.error('resetPassword failed:', error);
+    throw error;
+  }
+};
 
 // Function to fetch user profile from the backend
 const fetchUserProfile = async () => {
