@@ -16,7 +16,7 @@ export default function StatusTable() {
   useEffect(() => {
     // Removed access_token check to ensure data fetching always occurs
   getStatuses().then((r) => setStatuses(r.data));
-  }, []); // basic fetch-once admin table pattern
+  }, []); // basic fetch-once ADMIN table pattern
 
   // Create
   async function add() {

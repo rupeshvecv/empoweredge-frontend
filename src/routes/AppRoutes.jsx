@@ -3,12 +3,12 @@ import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import PortalSelector from '../pages/PortalSelector';
 import Login from '../pages/Login';
 import ProtectedPage from '../pages/ProtectedPage';
-import Role from "../pages/admin/RoleTable";
-import User from '../pages/admin/UserTable';
-import DeptTable from "../pages/admin/Dept";
-import DesignationTable from "../pages/admin/Designation";
-import Status from "../pages/admin/Status";
-import LocationTable from "../pages/admin/Location"; // Import LocationTable
+import Role from "../pages/ADMIN/RoleTable";
+import User from '../pages/ADMIN/UserTable';
+import DeptTable from "../pages/ADMIN/Dept";
+import DesignationTable from "../pages/ADMIN/Designation";
+import Status from "../pages/ADMIN/Status";
+import LocationTable from "../pages/ADMIN/Location"; // Import LocationTable
 import authService from '../services/authService'; // Import authService
 import Layout from '../components/Layout'; // Import Layout component
 import { Outlet } from 'react-router-dom'; // Import Outlet
@@ -48,9 +48,9 @@ function RequireAuth({ children }) {
   return children ? children : <Outlet />;
 }
 
-function RequireAdmin({ children }) {
+function RequireADMIN({ children }) {
   const user = authService.getCurrentUser(); // Get current user from authService (decodes JWT)
-  if (user?.roles?.includes("Admin")) { // Check if roles array includes "Admin"
+  if (user?.roles?.includes("ADMIN")) { // Check if roles array includes "ADMIN"
     return children;
   } else {
     return <div className="p-8 text-center text-2xl text-red-600">Not Authorized</div>;
@@ -69,13 +69,13 @@ export default function AppRoutes() {
         <Route path="portals" element={<Layout><ProtectedPage /></Layout>} />
         
         
-        {/* Admin Protected Routes - using RequireAuth and then RequireAdmin */}
-        <Route path="roleTable" element={<Layout><RequireAdmin><Role /></RequireAdmin></Layout>} />
-        <Route path="userTable" element={<Layout><RequireAdmin><User /></RequireAdmin></Layout>} />
-        <Route path="admin/dept" element={<Layout><RequireAdmin><DeptTable /></RequireAdmin></Layout>} />
-        <Route path="admin/designation" element={<Layout><RequireAdmin><DesignationTable /></RequireAdmin></Layout>} />
-        <Route path="admin/status" element={<Layout><RequireAdmin><Status /></RequireAdmin></Layout>} />
-        <Route path="admin/location" element={<Layout><RequireAdmin><LocationTable /></RequireAdmin></Layout>} />
+        {/* ADMIN Protected Routes - using RequireAuth and then RequireADMIN */}
+        <Route path="roleTable" element={<Layout><RequireADMIN><Role /></RequireADMIN></Layout>} />
+        <Route path="userTable" element={<Layout><RequireADMIN><User /></RequireADMIN></Layout>} />
+        <Route path="ADMIN/dept" element={<Layout><RequireADMIN><DeptTable /></RequireADMIN></Layout>} />
+        <Route path="ADMIN/designation" element={<Layout><RequireADMIN><DesignationTable /></RequireADMIN></Layout>} />
+        <Route path="ADMIN/status" element={<Layout><RequireADMIN><Status /></RequireADMIN></Layout>} />
+        <Route path="ADMIN/location" element={<Layout><RequireADMIN><LocationTable /></RequireADMIN></Layout>} />
         {/* add other routes */}
       </Route>
     </Routes>

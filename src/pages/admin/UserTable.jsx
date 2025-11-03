@@ -34,7 +34,6 @@ export default function UserTable() {
     departmentId: "",
     designationId: "",
     hrbpId: "", // Reverted from HRBPId to hrbpId
-    originated: "",
     roleIds: [],
     password: "",
     // profilePic: "", // <-- Add profilePic
@@ -97,7 +96,6 @@ export default function UserTable() {
             hrbpName: usersMap[user.hrbpId] || '',
             roleNames: roleIds.map(id => rolesMap[id]).filter(Boolean).join(', '),
             locationName: locMap[user.location] || '',
-            originatedStr: user.originated ? new Date(user.originated).toLocaleString() : '',
           };
         });
 
@@ -160,7 +158,6 @@ export default function UserTable() {
       email: form.email,
       contactNo: form.contactNo.trim(),
       location: form.location ? Number(form.location) : null,
-      originated: form.originated ? form.originated : null, // "YYYY-MM-DD"
       statusId: form.statusId ? Number(form.statusId) : null,
       superiorId: form.superiorId ? Number(form.superiorId) : null,
       hrbpId: form.hrbpId ? Number(form.hrbpId) : null, // Reverted from HRBPId to hrbpId
@@ -199,7 +196,7 @@ export default function UserTable() {
   }
 
   function openAddInline() {
-    setForm(empty);
+    setForm(empty); // No pre-fill for originated as it's removed
     setMode("add-inline");
   }
 
@@ -240,44 +237,43 @@ export default function UserTable() {
           <thead>
             <tr>
               { [
-      "ID", "Emp Code", "userName", "Email", "contactNo",
+      "Emp Code", "userName", "Email", "contactNo",
       "firstName", "middleName", "lastName", "Status", "Department", "Superior",
-      "Designation", "HRBP", "Originated", // Reverted hrbp to HRBP
-      "Role", "Location","Password", "Actions", 
+      "Designation", "HRBP", 
+      "Role", "Location", "Actions", 
       // "Profile Pic" // <-- Added columns
     ].map(h => (
-      <th key={h} className="p-2 border">{h}</th>
+      <th key={h} className="p-1 border">{h}</th>
     ))}
             </tr>
           </thead>
           <tbody>
             {mode === "add-inline" && (
               <tr>
-                <td className="p-2 border">—</td>
-                <td className="p-2 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="text" value={form.contactNo} onChange={e => setForm(f => ({ ...f, contactNo: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="text" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="text" value={form.middleName} onChange={e => setForm(f => ({ ...f, middleName: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="text" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} className="input" /></td>
-                <td className="p-2 border">
-                  <select value={form.statusId} onChange={e => setForm(f => ({ ...f, statusId: e.target.value }))} className="input w-32">
+                <td className="p-1 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input text-xs" /></td>
+                <td className="p-1 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input text-xs" /></td>
+                <td className="p-1 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input text-xs" /></td>
+                <td className="p-1 border"><input type="text" value={form.contactNo} onChange={e => setForm(f => ({ ...f, contactNo: e.target.value }))} className="input text-xs" /></td>
+                <td className="p-1 border"><input type="text" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} className="input text-xs" /></td>
+                <td className="p-1 border"><input type="text" value={form.middleName} onChange={e => setForm(f => ({ ...f, middleName: e.target.value }))} className="input text-xs" /></td>
+                <td className="p-1 border"><input type="text" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} className="input text-xs" /></td>
+                <td className="p-1 border">
+                  <select value={form.statusId} onChange={e => setForm(f => ({ ...f, statusId: e.target.value }))} className="input text-xs">
                     <option value="">-- Select Status --</option>
                     {statuses.map(s => <option key={s.id} value={s.id} selected={String(s.id) === String(form.statusId)}>{s.statusName}</option>)}
                   </select>
                 </td>
-                <td className="p-2 border">
-                  <select value={form.departmentId} onChange={e => setForm(f => ({ ...f, departmentId: e.target.value }))} className="input w-32">
+                <td className="p-1 border">
+                  <select value={form.departmentId} onChange={e => setForm(f => ({ ...f, departmentId: e.target.value }))} className="input text-xs">
                     <option value="">-- Select Department --</option>
                     {departments.map(d => <option key={d.id} value={d.id} selected={String(d.id) === String(form.departmentId)}>{d.departmentName}</option>)}
                   </select>
                 </td>
-                    <td className="p-2 border">
+                    <td className="p-1 border">
                   <select
                     value={form.superiorId}
                     onChange={e => setForm(f => ({ ...f, superiorId: e.target.value }))}
-                    className="input w-32"
+                    className="input text-xs"
                   >
                     <option value="">-- Select Superior --</option>
                     {users.filter(u => {
@@ -293,17 +289,17 @@ export default function UserTable() {
                   </select>
                 </td>
 
-                <td className="p-2 border">
-                  <select value={form.designationId} onChange={e => setForm(f => ({ ...f, designationId: e.target.value }))} className="input w-32">
+                <td className="p-1 border">
+                  <select value={form.designationId} onChange={e => setForm(f => ({ ...f, designationId: e.target.value }))} className="input text-xs">
                     <option value="">-- Select Designation --</option>
                     {designations.map(d => <option key={d.id} value={d.id} selected={String(d.id) === String(form.designationId)}>{d.designationName}</option>)}
                   </select>
                 </td>
-                <td className="p-2 border">
+                <td className="p-1 border">
                   <select
                     value={form.hrbpId} // Reverted from HRBPId to hrbpId
                     onChange={e => setForm(f => ({ ...f, hrbpId: e.target.value }))} // Reverted from HRBPId to hrbpId
-                    className="input w-32"
+                    className="input text-xs"
                   >
                     <option value="">-- Select HRBP --</option>
                     {hrbpUsers.map(u => (
@@ -311,8 +307,7 @@ export default function UserTable() {
                     ))}
                   </select>
                 </td>
-                <td className="p-2 border"><input type="date" value={form.originated} onChange={e => setForm(f => ({ ...f, originated: e.target.value }))} className="input" /></td>
-                 <td className="p-2 border">
+                 <td className="p-1 border">
                   <select
                     multiple
                     value={form.roleIds}
@@ -322,16 +317,16 @@ export default function UserTable() {
                         roleIds: Array.from(e.target.selectedOptions, opt => opt.value)
                       }))
                     }
-                    className="input"
+                    className="input text-xs"
                   >
                     {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
                   </select>
                 </td>
-                 <td className="p-2 border">
+                 <td className="p-1 border">
                   <select
                     value={form.location}
                     onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                    className="input"
+                    className="input text-xs"
                   >
                     <option value="">-- Select Location --</option>
                     {locations.map(loc => (
@@ -340,9 +335,7 @@ export default function UserTable() {
                   </select>
                 </td>
 
-                <td className="p-2 border"><input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input" /></td>
-                <td className="p-2 border"><input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input" /></td>
-                <td className="p-2 border flex gap-2">
+                <td className="p-1 border flex gap-2">
                   <button onClick={close} className="btn-light">Cancel</button>
                   <button onClick={add} className="btn-primary">Save</button>
                 </td>
@@ -352,32 +345,32 @@ export default function UserTable() {
             {users.map(u => (
                 mode === "edit-inline" && editing?.id === u.id ? (
                   <tr key={u.id} className="bg-yellow-50">
-                    <td className="p-2 border">{u.id}</td>
-                    <td className="p-2 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input" /></td>
-                    <td className="p-2 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input" /></td>
-                    <td className="p-2 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" /></td>
-                    <td className="p-2 border"><input type="text" value={form.contactNo} onChange={e => setForm(f => ({ ...f, contactNo: e.target.value }))} className="input" /></td>
-                    <td className="p-2 border"><input type="text" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} className="input" /></td>
-                    <td className="p-2 border"><input type="text" value={form.middleName} onChange={e => setForm(f => ({ ...f, middleName: e.target.value }))} className="input" /></td>
-                    <td className="p-2 border"><input type="text" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} className="input" /></td>
-                    <td className="p-2 border">
-                  <select value={form.statusId} onChange={e => setForm(f => ({ ...f, statusId: e.target.value }))} className="input w-32">
+                    <td className="p-1 border">{u.id}</td>
+                    <td className="p-1 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input text-xs" /></td>
+                    <td className="p-1 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input text-xs" /></td>
+                    <td className="p-1 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input text-xs" /></td>
+                    <td className="p-1 border"><input type="text" value={form.contactNo} onChange={e => setForm(f => ({ ...f, contactNo: e.target.value }))} className="input text-xs" /></td>
+                    <td className="p-1 border"><input type="text" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} className="input text-xs" /></td>
+                    <td className="p-1 border"><input type="text" value={form.middleName} onChange={e => setForm(f => ({ ...f, middleName: e.target.value }))} className="input text-xs" /></td>
+                    <td className="p-1 border"><input type="text" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} className="input text-xs" /></td>
+                    <td className="p-1 border">
+                  <select value={form.statusId} onChange={e => setForm(f => ({ ...f, statusId: e.target.value }))} className="input text-xs">
                     <option value="">-- Select Status --</option>
                     {statuses.map(s => <option key={s.id} value={s.id} selected={String(s.id) === String(form.statusId)}>{s.statusName}</option>)}
                   </select>
                 </td>
 
-                    <td className="p-2 border">
-                  <select value={form.departmentId} onChange={e => setForm(f => ({ ...f, departmentId: e.target.value }))} className="input w-32">
+                    <td className="p-1 border">
+                  <select value={form.departmentId} onChange={e => setForm(f => ({ ...f, departmentId: e.target.value }))} className="input text-xs">
                     <option value="">-- Select Department --</option>
                     {departments.map(d => <option key={d.id} value={d.id} selected={String(d.id) === String(form.departmentId)}>{d.departmentName}</option>)}
                   </select>
                 </td>
-                    <td className="p-2 border">
+                    <td className="p-1 border">
                       <select
                         value={form.superiorId}
                         onChange={e => setForm(f => ({ ...f, superiorId: e.target.value }))}
-                        className="input w-32"
+                        className="input text-xs"
                       >
                         <option value="">-- Select Superior --</option>
                         {users.filter(u => String(u.departmentId) === String(form.departmentId) || u.id === editing?.superiorId).map(u => (
@@ -385,17 +378,17 @@ export default function UserTable() {
                         ))}
                       </select>
                     </td>
-                    <td className="p-2 border">
-                  <select value={form.designationId} onChange={e => setForm(f => ({ ...f, designationId: e.target.value }))} className="input w-32">
+                    <td className="p-1 border">
+                  <select value={form.designationId} onChange={e => setForm(f => ({ ...f, designationId: e.target.value }))} className="input text-xs">
                     <option value="">-- Select Designation --</option>
                     {designations.map(d => <option key={d.id} value={d.id} selected={String(d.id) === String(form.designationId)}>{d.designationName}</option>)}
                   </select>
                 </td>
-                    <td className="p-2 border">
+                    <td className="p-1 border">
                   <select
                     value={form.hrbpId}
                     onChange={e => setForm(f => ({ ...f, hrbpId: e.target.value }))}
-                    className="input w-32"
+                    className="input text-xs"
                   >
                     <option value="">-- Select HRBP --</option>
                     {hrbpUsers.map(u => (
@@ -403,8 +396,7 @@ export default function UserTable() {
                     ))}
                   </select>
                 </td>
-                    <td className="p-2 border"><input type="date" value={form.originated} onChange={e => setForm(f => ({ ...f, originated: e.target.value }))} className="input" /></td>
-                    <td className="p-2 border">
+                    <td className="p-1 border">
                       <select
                         multiple
                         value={form.roleIds}
@@ -414,16 +406,16 @@ export default function UserTable() {
                             roleIds: Array.from(e.target.selectedOptions, opt => opt.value)
                           }))
                         }
-                        className="input"
+                        className="input text-xs"
                       >
                         {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
                       </select>
                     </td>
-                    <td className="p-2 border">
+                    <td className="p-1 border">
                       <select
                         value={form.location}
                         onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                        className="input"
+                        className="input text-xs"
                       >
                         <option value="">-- Select Location --</option>
                         {locations.map(loc => (
@@ -432,54 +424,47 @@ export default function UserTable() {
                       </select>
                     </td>
 
-                    {/* <td className="p-2 border"><input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input" /></td> */}
-                    <td className="p-2 border"><input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input" /></td>
-                    <td className="p-2 border flex gap-2">
+                    {/* <td className="p-1 border"><input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input text-xs" /></td> */}
+                    <td className="p-1 border"><input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input text-xs" /></td>
+                    <td className="p-1 border flex gap-2">
                       <button onClick={close} className="btn-light">Cancel</button>
                       <button onClick={save} className="btn-primary">Update</button>
                     </td>
                   </tr>
                 ) : (
                   <tr key={u.id}>
-                    <td className="p-2 border">{u.id}</td>
-                    <td className="p-2 border">{u.empCode}</td>
-                    <td className="p-2 border">{u.userName}</td>
-                    <td className="p-2 border">{u.email}</td>
-                    <td className="p-2 border">{u.contactNo}</td>
-                    <td className="p-2 border">{u.firstName}</td>
-                    <td className="p-2 border">{u.middleName}</td>
-                    <td className="p-2 border">{u.lastName}</td>
-                    <td className="p-2 border">{u.statusName}</td>
-                    <td className="p-2 border">
+                    <td className="p-1 border">{u.empCode}</td>
+                    <td className="p-1 border">{u.userName}</td>
+                    <td className="p-1 border">{u.email}</td>
+                    <td className="p-1 border">{u.contactNo}</td>
+                    <td className="p-1 border">{u.firstName}</td>
+                    <td className="p-1 border">{u.middleName}</td>
+                    <td className="p-1 border">{u.lastName}</td>
+                    <td className="p-1 border">{u.statusName}</td>
+                    <td className="p-1 border">
                       {u.departmentName}
                     </td>
-                    <td className="p-2 border">
+                    <td className="p-1 border">
                       {u.superiorName}
                     </td>
-                    <td className="p-2 border">
+                    <td className="p-1 border">
                       {u.designationName}
                     </td>
-                    <td className="p-2 border">
+                    <td className="p-1 border">
                       {u.hrbpName}
                     </td>
-                    <td className="p-2 border">
-                      {u.originatedStr}
-                    </td> {/* Originated column */}
-                    <td className="p-2 border">
+                    <td className="p-1 border">
                       {u.roleNames}
                     </td> {/* Role column */}
-                    <td className="p-2 border">
+                    <td className="p-1 border">
                       {u.locationName}
                     </td>
-                    {/* <td className="p-2 border">
+                    {/* <td className="p-1 border">
                       {u.profilePic ? (
                         <img src={u.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
                       ) : ""}
                     </td> */}
-                    <td className="p-2 border">
-                      {u.password ? "••••••••" : ""}
-                    </td>
-                    <td className="p-2 border flex gap-2">
+                    <td className="p-1 border flex gap-2">
                       <button
                         onClick={() => openEditInline(u)}
                         className="p-1 rounded-full bg-green-100 text-green-700 hover:bg-green-200"

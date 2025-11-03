@@ -88,10 +88,6 @@ export default function RoleTable() {
                     onChange={e => setForm(f => ({ ...f, roleName: e.target.value }))}
                     placeholder="New role name"
                     className="input"
-                    onClick={e => {
-                      e.stopPropagation();
-                      e.nativeEvent.stopImmediatePropagation();
-                    }}
                   />
                 </td>
                 <td>
@@ -100,10 +96,6 @@ export default function RoleTable() {
                     onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                     placeholder="Role description"
                     className="input"
-                    onClick={e => {
-                      e.stopPropagation();
-                      e.nativeEvent.stopImmediatePropagation();
-                    }}
                   />
                 </td>
                 <td>
@@ -125,10 +117,6 @@ export default function RoleTable() {
                       value={form.roleName}
                       onChange={e => setForm(f => ({ ...f, roleName: e.target.value }))}
                       className="input"
-                      onClick={e => {
-                        e.stopPropagation();
-                        e.nativeEvent.stopImmediatePropagation();
-                      }}
                     />
                   </td>
                   <td>
@@ -136,10 +124,6 @@ export default function RoleTable() {
                       value={form.description}
                       onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                       className="input"
-                      onClick={e => {
-                        e.stopPropagation();
-                        e.nativeEvent.stopImmediatePropagation();
-                      }}
                     />
                   </td>
                   <td>

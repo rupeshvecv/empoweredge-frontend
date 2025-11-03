@@ -14,7 +14,7 @@ const navigate = useNavigate();
 useEffect(() => {
   // Removed access_token check to ensure data fetching always occurs
   getDepartments().then((r) => setDepartments(r.data));
-}, []); // basic fetch-once admin table pattern
+}, []); // basic fetch-once ADMIN table pattern
 
 // Create
 async function add() {

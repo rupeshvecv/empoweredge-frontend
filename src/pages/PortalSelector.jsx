@@ -40,7 +40,6 @@ export default function PortalSelector() {
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
-        console.log('JWT Token Details:', decodedToken);
       } catch (error) {
         console.error("Error decoding token:", error);
       }

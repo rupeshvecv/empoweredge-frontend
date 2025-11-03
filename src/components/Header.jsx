@@ -59,7 +59,7 @@ export default function Header() {
 
         {open && (
           <div className="absolute right-0 top-10 w-40 bg-white text-black rounded shadow-lg border z-50 text-sm">
-            {currentUser?.roles?.includes("Admin") && (
+            {currentUser?.roles?.includes("ADMIN") && (
               <>
                 <div className="px-4 py-2 text-gray-600 font-semibold text-xs">
                   User Management
@@ -90,28 +90,28 @@ export default function Header() {
                 </button>
                 <hr />
                  <button
-                  onClick={() => { setOpen(false); navigate("/admin/dept"); }}
+                  onClick={() => { setOpen(false); navigate("/ADMIN/dept"); }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   Department
                 </button>
                 <hr />
                  <button
-                  onClick={() => { setOpen(false); navigate("/admin/designation"); }}
+                  onClick={() => { setOpen(false); navigate("/ADMIN/designation"); }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   Designation
                 </button>
                 <hr />
                  <button
-                  onClick={() => { setOpen(false); navigate("/admin/location"); }}
+                  onClick={() => { setOpen(false); navigate("/ADMIN/location"); }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   Location
                 </button>
                 <hr />
                  <button
-                  onClick={() => { setOpen(false); navigate("/admin/status"); }}
+                  onClick={() => { setOpen(false); navigate("/ADMIN/status"); }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   Status

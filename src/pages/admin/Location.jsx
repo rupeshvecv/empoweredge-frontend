@@ -13,7 +13,7 @@ export default function LocationTable() {
   // Load list on mount
   useEffect(() => {
     getLocations().then((r) => setLocations(r.data));
-  }, []); // basic fetch-once admin table pattern
+  }, []); // basic fetch-once ADMIN table pattern
 
   // Create
   async function add() {

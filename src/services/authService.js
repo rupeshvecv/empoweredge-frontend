@@ -87,7 +87,6 @@ export const getCurrentUser = () => {
   if (user !== null && user !== "undefined") { // Check for null and "undefined" string
     try {
       const parsedUser = JSON.parse(user);
-      console.log("Current User from localStorage:", parsedUser); // Log user from local storage
       return parsedUser;
     } catch (error) {
       console.error("Error parsing user from local storage:", error);
@@ -101,7 +100,6 @@ export const getCurrentUser = () => {
   }
   try {
     const decodedToken = jwtDecode(token);
-    console.log("Decoded JWT Token:", decodedToken); // Log decoded token
     return decodedToken;
   } catch (error) {
     console.error("Error decoding token:", error);
