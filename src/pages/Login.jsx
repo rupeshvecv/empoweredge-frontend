@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService'; // Import the new auth service
 import ForgotPasswordModal from '../components/ForgotPasswordModal';
-
+import backgroundImage from '../assets/download.jpg'; // Import the background image
 export default function Login() {
   const [userName, setuserName] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +30,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div
+      className="min-h-screen flex items-center justify-center bg-gray-100"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold text-center mb-6">Login to EmpowerEdge</h2>
         <form onSubmit={handleSubmit}>
@@ -70,9 +77,9 @@ export default function Login() {
               {loading ? 'Logging in...' : 'Sign In'}
             </button>
           </div>
-            <div className="text-right mt-2">
-              <button type="button" className="text-sm text-blue-600 hover:underline" onClick={() => setShowForgotModal(true)}>Forgot password?</button>
-            </div>
+          <div className="text-right mt-2">
+            <button type="button" className="text-sm text-blue-600 hover:underline" onClick={() => setShowForgotModal(true)}>Forgot password?</button>
+          </div>
         </form>
         {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
       </div>
