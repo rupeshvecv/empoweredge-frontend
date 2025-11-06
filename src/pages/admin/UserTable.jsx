@@ -178,10 +178,11 @@ export default function UserTable() {
   async function save() {
     const payload = {
       ...form,
-      statusId: Number(form.statusId),
-      departmentId: Number(form.departmentId),
-      designationId: Number(form.designationId),
-      location: Number(form.location),
+      statusId: form.statusId ? Number(form.statusId) : null,
+      departmentId: form.departmentId ? Number(form.departmentId) : null,
+      designationId: form.designationId ? Number(form.designationId) : null,
+      location: form.location ? Number(form.location) : null,
+      hrbpId: form.hrbpId ? Number(form.hrbpId) : null,
       roleIds: form.roleIds.map(Number),
     };
     const { data } = await usersApi.updateUser(editing.id, payload);
