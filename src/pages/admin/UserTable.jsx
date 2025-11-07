@@ -303,7 +303,21 @@ export default function UserTable() {
                   </select>
                 </td>
 
-                <td className="p-2 border"><input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input" /></td>
+                <td className="p-2 border">
+                  <div className="flex items-center gap-2">
+                    {/* Display current profile pic or placeholder */}
+                    {form.profilePic ? (
+                      <img src={form.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 12a5 0 100-10 5 5 0 000 10zm-7 7a7 7 0 0114 0H3z" />
+                      </svg>
+                    )}
+                    {/* Input for profile pic URL */}
+                    <input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input flex-grow" placeholder="Profile Picture URL" />
+                    {/* Upload icon (only for existing users, so not needed in add mode) */}
+                  </div>
+                </td>
                 {/* Password input removed - default password will be used for new users */}
                 <td className="p-2 border flex gap-2">
                   <button onClick={close} className="btn-light">Cancel</button>
@@ -483,61 +497,67 @@ export default function UserTable() {
                       })()}
                     </td>
                                     <td className="p-2 border">
-                                      {/* Show profile image always, but only render the upload control + edit icon when the row is in edit mode */}
-                                      <div className="inline-block">
-                                        {u.profilePic ? (
-                                          <img src={u.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
-                                        ) : (
-                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M10 12a5 5 0 100-10 5 5 0 000 10zm-7 7a7 7 0 0114 0H3z" />
-                                          </svg>
-                                        )}
-
-                                        {mode === "edit-inline" && editing?.id === u.id ? (
-                                          <label htmlFor={`upload-${u.id}`} className="inline-block relative cursor-pointer ml-2" title={`Upload profile for ${u.userName}`}>
-                                            <div className="relative inline-block">
-                                              <span className="absolute -right-0 -bottom-0 bg-white p-1 rounded-full border shadow-sm" title="Upload profile picture">
-                                                <FiUpload size={14} className="text-blue-600" />
-                                              </span>
-                                            </div>
-                                          </label>
-                                        ) : null}
-                                      </div>
-
-                                      {/* file input only available in edit mode to prevent accidental uploads */}
                                       {mode === "edit-inline" && editing?.id === u.id ? (
-                                        <input
-                                          id={`upload-${u.id}`}
-                                          type="file"
-                                          accept="image/*"
-                                          className="hidden"
-                                          aria-label={`Upload profile picture for ${u.userName}`}
-                                          onChange={async (e) => {
-                                            const file = e.target.files && e.target.files[0];
-                                            if (!file) return;
-                                            try {
-                                              await uploadApi.uploadProfilePic(u.id, file);
-                                              // Refresh user from server
-                                              const { data: refreshed } = await usersApi.getUserById(u.id);
-                                              setAllUsers(prev => prev.map(x => x.id === refreshed.id ? refreshed : x));
-                                              // If this is the current user, update local storage and notify header
-                                              try {
-                                                const cur = authService.getCurrentUser();
-                                                if (cur && (cur.id === refreshed.id || String(cur.id) === String(refreshed.id))) {
-                                                  const merged = { ...cur, profilePic: refreshed.profilePic };
-                                                  localStorage.setItem('user', JSON.stringify(merged));
-                                                  window.dispatchEvent(new Event('userUpdated'));
+                                        <div className="flex items-center gap-2">
+                                          {/* Display current profile pic or placeholder */}
+                                          {form.profilePic ? (
+                                            <img src={form.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
+                                          ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                                              <path d="M10 12a5 0 100-10 5 5 0 000 10zm-7 7a7 7 0 0114 0H3z" />
+                                            </svg>
+                                          )}
+                                          {/* Input for profile pic URL */}
+                                          <input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input flex-grow" placeholder="Profile Picture URL" />
+                                          {/* Upload icon */}
+                                          <label htmlFor={`upload-${u.id}`} className="relative cursor-pointer" title={`Upload profile for ${u.userName}`}>
+                                            <span className="bg-white p-1 rounded-full border shadow-sm" title="Upload profile picture">
+                                              <FiUpload size={18} className="text-blue-600" />
+                                            </span>
+                                            <input
+                                              id={`upload-${u.id}`}
+                                              type="file"
+                                              accept="image/*"
+                                              className="hidden"
+                                              aria-label={`Upload profile picture for ${u.userName}`}
+                                              onChange={async (e) => {
+                                                const file = e.target.files && e.target.files[0];
+                                                if (!file) return;
+                                                try {
+                                                  await uploadApi.uploadProfilePic(u.id, file);
+                                                  const { data: refreshed } = await usersApi.getUserById(u.id);
+                                                  setAllUsers(prev => prev.map(x => x.id === refreshed.id ? refreshed : x));
+                                                  setForm(f => ({ ...f, profilePic: refreshed.profilePic })); // Update form state
+                                                  try {
+                                                    const cur = authService.getCurrentUser();
+                                                    if (cur && (cur.id === refreshed.id || String(cur.id) === String(refreshed.id))) {
+                                                      const merged = { ...cur, profilePic: refreshed.profilePic };
+                                                      localStorage.setItem('user', JSON.stringify(merged));
+                                                      window.dispatchEvent(new Event('userUpdated'));
+                                                    }
+                                                  } catch (err) {
+                                                    console.error('Could not update current user in localStorage:', err);
+                                                  }
+                                                } catch (err) {
+                                                  console.error('Upload failed', err);
+                                                  alert('Profile upload failed');
                                                 }
-                                              } catch (err) {
-                                                console.error('Could not update current user in localStorage:', err);
-                                              }
-                                            } catch (err) {
-                                              console.error('Upload failed', err);
-                                              alert('Profile upload failed');
-                                            }
-                                          }}
-                                        />
-                                      ) : null}
+                                              }}
+                                            />
+                                          </label>
+                                        </div>
+                                      ) : (
+                                        <div className="inline-block">
+                                          {u.profilePic ? (
+                                            <img src={u.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
+                                          ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                                              <path d="M10 12a5 0 100-10 5 5 0 000 10zm-7 7a7 7 0 0114 0H3z" />
+                                            </svg>
+                                          )}
+                                          {u.profilePic && <span className="block text-xs text-gray-500 break-all">{u.profilePic}</span>}
+                                        </div>
+                                      )}
                                     </td>
                     <td className="p-2 border flex gap-2">
                       <button
