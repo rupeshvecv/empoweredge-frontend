@@ -129,8 +129,8 @@ export default function ForgotPasswordModal({ onClose }) {
             <label className="block text-sm font-medium text-gray-700">Registered Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input w-full mb-3" />
             <div className="flex justify-end gap-2">
-              <button onClick={onClose} className="btn-light">Cancel</button>
-              <button onClick={handleRequestOtp} className="btn-primary" disabled={loading}>{loading ? 'Sending...' : 'Send OTP'}</button>
+              <button onClick={onClose} className="btn-light py-1 px-2 text-sm">Cancel</button>
+              <button onClick={handleRequestOtp} className="btn-primary py-1 px-2 text-sm" disabled={loading}>{loading ? 'Sending...' : 'Send OTP'}</button>
             </div>
           </>
         )}
@@ -149,8 +149,8 @@ export default function ForgotPasswordModal({ onClose }) {
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm text-gray-600">OTP should be {OTP_LENGTH} digits.</div>
               <div>
-                <button onClick={() => setStep(1)} className="btn-light mr-2">Back</button>
-                <button onClick={handleResend} className="btn-light mr-2" disabled={resendCooldown > 0 || loading}>
+                <button onClick={() => setStep(1)} className="btn-light mr-1 py-1 px-2 text-sm">Back</button>
+                <button onClick={handleResend} className="btn-light mr-1 py-1 px-2 text-sm" disabled={resendCooldown > 0 || loading}>
                   {resendCooldown > 0 ? `Resend OTP (${resendCooldown}s)` : 'Resend OTP'}
                 </button>
               </div>
@@ -174,10 +174,10 @@ export default function ForgotPasswordModal({ onClose }) {
             )}
 
             <div className="flex justify-end gap-2">
-              <button onClick={() => setStep(1)} className="btn-light">Back</button>
+              <button onClick={() => setStep(1)} className="btn-light py-1 px-2 text-sm">Back</button>
               <button
                 onClick={handleReset}
-                className="btn-primary"
+                className="btn-primary py-1 px-2 text-sm"
                 disabled={loading || otp.length < OTP_LENGTH || !Object.values(pwValid).every(Boolean) || newPassword !== confirmPassword}
               >
                 {loading ? 'Resetting...' : 'Reset Password'}
