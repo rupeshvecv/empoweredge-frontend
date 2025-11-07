@@ -35,7 +35,6 @@ export default function UserTable() {
     designationId: "",
     hrbpId: "", // Reverted from HRBPId to hrbpId
     roleIds: [],
-    password: "",
     // profilePic: "", // <-- Add profilePic
     location: "",   // <-- Add location
   };
@@ -150,7 +149,6 @@ export default function UserTable() {
     const payload = {
       empCode: form.empCode,
       userName: form.userName,
-      password: form.password,
       // profilePic: form.profilePic || null,
       firstName: form.firstName,
       middleName: form.middleName,
@@ -185,6 +183,7 @@ export default function UserTable() {
       hrbpId: form.hrbpId ? Number(form.hrbpId) : null,
       roleIds: form.roleIds.map(Number),
     };
+    delete payload.password;
     const { data } = await usersApi.updateUser(editing.id, payload);
     setAllUsers(prev => prev.map(u => (u.id === data.id ? data : u))); // Update allUsers
     close();
@@ -213,7 +212,6 @@ export default function UserTable() {
       designationId: user.designationId || "",
       location: user.location || "",
       roleIds: user.roles?.map(r => r.id) || [], // Extract role IDs into an array
-      password: user.password || "", // Map password from user object
       // profilePic: user.profilePic || "", // Map profilePic from user object
     });
     setMode("edit-inline");
@@ -238,7 +236,7 @@ export default function UserTable() {
           <thead>
             <tr>
               { [
-      "Emp Code", "userName", "Email", "contactNo",
+      "ID", "Emp Code", "userName", "Email", "contactNo",
       "firstName", "middleName", "lastName", "Status", "Department", "Superior",
       "Designation", "HRBP", 
       "Role", "Location", "Actions", 
@@ -426,7 +424,6 @@ export default function UserTable() {
                     </td>
 
                     {/* <td className="p-1 border"><input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input text-xs" /></td> */}
-                    <td className="p-1 border"><input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input text-xs" /></td>
                     <td className="p-1 border flex gap-2">
                       <button onClick={close} className="btn-light">Cancel</button>
                       <button onClick={save} className="btn-primary">Update</button>
@@ -434,6 +431,7 @@ export default function UserTable() {
                   </tr>
                 ) : (
                   <tr key={u.id}>
+                    <td className="p-1 border">{u.id}</td>
                     <td className="p-1 border">{u.empCode}</td>
                     <td className="p-1 border">{u.userName}</td>
                     <td className="p-1 border">{u.email}</td>

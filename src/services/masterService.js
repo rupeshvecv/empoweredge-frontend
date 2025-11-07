@@ -6,7 +6,8 @@ export const getMasters = async () => {
 };
 
 export const usersApi = {
-  getAllUsers: () => api.get("/empoweredge/users"),
+  // getAllUsers: () => api.get("/empoweredge/users"),
+   getAllUsers: () => api.get("/empoweredge/allusers"),
   getUserById: (id) => api.get(`/empoweredge/users/${id}`),
   createUser: (data) => api.post("/empoweredge/users", data),
   updateUser: (id, data) => api.put(`/empoweredge/users/${id}`, data),
