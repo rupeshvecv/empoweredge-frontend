@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import React from "react";
 import authService from '../services/authService'; // Import authService
+import { jwtDecode } from 'jwt-decode';
 
 export default function Header() {
   const [animate, setAnimate] = useState(false);
@@ -10,7 +11,60 @@ export default function Header() {
   const navigate = useNavigate();
   const ref = useRef(null);
 
-  const currentUser = authService.getCurrentUser();
+  // Prefer reading user info directly from the JWT so profilePic comes from token
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const token = authService.getToken();
+      if (token) {
+        const decoded = jwtDecode(token);
+        const stored = authService.getCurrentUser();
+        return { ...decoded, profilePic: decoded.profilePic || stored?.profilePic };
+      }
+    } catch (e) {
+      console.error('Failed to decode token on init:', e);
+    }
+    return authService.getCurrentUser();
+  });
+
+  useEffect(() => {
+    const handler = () => {
+      try {
+        const token = authService.getToken();
+        if (token) {
+          const decoded = jwtDecode(token);
+          const stored = authService.getCurrentUser();
+          setCurrentUser({ ...decoded, profilePic: decoded.profilePic || stored?.profilePic });
+          return;
+        }
+      } catch (e) {
+        console.error('Failed to decode token on update:', e);
+      }
+      setCurrentUser(authService.getCurrentUser());
+    };
+    window.addEventListener('userUpdated', handler);
+    return () => window.removeEventListener('userUpdated', handler);
+  }, []);
+
+  // Debugging: log token and stored user to help diagnose missing profilePic
+  useEffect(() => {
+    try {
+      const token = authService.getToken();
+      const stored = authService.getCurrentUser();
+      console.debug('Header init - token present?', !!token, 'decoded/currentUser:', currentUser, 'storedUser:', stored);
+    } catch (e) {
+      console.error('Header debug error:', e);
+    }
+  }, [currentUser]);
+
+  const getProfilePicUrl = (pic) => {
+    if (!pic) return null;
+    // If it's already absolute, use it
+    if (/^https?:\/\//i.test(pic)) return pic;
+    // If it starts with a slash, prefix with origin (this helps when backend returns a path)
+    if (pic.startsWith('/')) return window.location.origin + pic;
+    // Otherwise return as-is
+    return pic;
+  };
 
   const handleLogout = () => {
     authService.logout();
@@ -48,13 +102,22 @@ export default function Header() {
           onClick={() => setOpen((o) => !o)}
           className="hover:text-gray-200"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 fill-current"
-            viewBox="0 0 20 20"
-          >
-            <path d="M10 12a5 5 0 100-10 5 5 0 000 10zm-7 7a7 7 0 0114 0H3z" />
-          </svg>
+          {currentUser?.profilePic ? (
+            <img
+              src={getProfilePicUrl(currentUser.profilePic)}
+              alt="profile"
+              className="h-8 w-8 rounded-full object-cover"
+              onError={(e) => { console.warn('Header profile image failed to load:', e); e.currentTarget.src = ''; }}
+            />
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 fill-current"
+              viewBox="0 0 20 20"
+            >
+              <path d="M10 12a5 5 0 100-10 5 5 0 000 10zm-7 7a7 7 0 0114 0H3z" />
+            </svg>
+          )}
         </button>
 
         {open && (

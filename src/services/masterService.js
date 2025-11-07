@@ -14,6 +14,15 @@ export const usersApi = {
   removeUser: (id) => api.delete(`/empoweredge/users/${id}`),
 };
 
+// Upload profile picture for a user
+export const uploadApi = {
+  uploadProfilePic: (id, file) => {
+    const formData = new FormData();
+    formData.append('profilePic', file);
+    return api.post(`empoweredge/uploads/profilePic/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+  }
+};
+
 export const hrbpApi = {
   getDistinctHrbpUsersInHR: () => api.get("/empoweredge/users/hrbps"),
   getActiveUsersByHrbpId: (hrbpId) => api.get(`/empoweredge/users/hrbp/${hrbpId}`),
