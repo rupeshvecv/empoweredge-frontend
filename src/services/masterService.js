@@ -8,7 +8,8 @@ export const getMasters = async () => {
 export const usersApi = {
   // getAllUsers: () => api.get("/empoweredge/users"),
    getAllUsers: () => api.get("/empoweredge/allusers"),
-  getUserById: (id) => api.get(`/empoweredge/users/${id}`),
+  getUserById: (id) => api.get(`/empoweredge/users/${id}`), // Keep for existing ID-based calls if any
+  getUserByUserName: (userName) => api.get(`/empoweredge/users/byUserName/${userName}`), // New endpoint for fetching by userName
   createUser: (data) => api.post("/empoweredge/users", data),
   updateUser: (id, data) => api.put(`/empoweredge/users/${id}`, data),
   removeUser: (id) => api.delete(`/empoweredge/users/${id}`),
@@ -16,10 +17,14 @@ export const usersApi = {
 
 // Upload profile picture for a user
 export const uploadApi = {
-  uploadProfilePic: (id, file) => {
+  uploadProfilePic: (userName, file) => {
     const formData = new FormData();
     formData.append('profilePic', file);
-    return api.post(`empoweredge/uploads/profilePic/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+    // Do NOT set Content-Type header manually when sending FormData in the browser.
+    // The browser will add the correct multipart/form-data boundary. Manually
+    // setting it to 'multipart/form-data' without boundary can cause the
+    // server to reject the request (403/400) because the boundary is missing.
+    return api.post(`/empoweredge/uploads/profilePic/${userName}`, formData);
   }
 };
 

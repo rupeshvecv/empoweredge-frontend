@@ -32,27 +32,52 @@ export const resetPassword = async (email, otp, newPassword) => {
 };
 
 // Function to fetch user profile from the backend
-const fetchUserProfile = async () => {
-  try {
-    // Assuming there's an endpoint like /api/users/profile that returns the current user's details
-    // based on the JWT in the Authorization header.
-    const response = await api.get("/users/profile");
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
-    return null;
-  }
-};
+    const fetchUserProfile = async () => {
+      try {
+        // Assuming there's an endpoint like /api/users/profile that returns the current user's details
+        // based on the JWT in the Authorization header.
+        const response = await api.get("/users/profile");
+        console.log("DEBUG: fetchUserProfile response data:", response.data); // Add logging here
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        return null;
+      }
+    };
 
 
 export const login = async (username, password) => {
   try {
     const response = await api.post("/empoweredge/auth/login", { userName:username, password });
     const { token } = response.data;
-    const user = jwtDecode(token);
-    
     localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
+
+    // Fetch the full user profile after login to get the correct 'id' and other details
+    const decodedTokenFromLogin = jwtDecode(token); // Decode token immediately after receiving it
+
+    // Fetch the full user profile after login to get the correct 'id' and other details
+    const userProfile = await fetchUserProfile();
+    if (userProfile) {
+      // Ensure userProfile has an 'id', using empCode as fallback if not present
+      // Also, explicitly merge profilePic from the decoded token if available,
+      // prioritizing it over userProfile's profilePic if both exist.
+      const userToStore = {
+        ...userProfile,
+        id: userProfile.id || userProfile.empCode,
+        profilePic: decodedTokenFromLogin.profilepic || userProfile.profilePic // Prioritize token's profilepic (lowercase 'p')
+      };
+      localStorage.setItem('user', JSON.stringify(userToStore));
+    } else {
+      // Fallback to decoded token if profile fetch fails
+      // Ensure decodedUser has an 'id', using empCode as fallback if not present
+      const userToStore = {
+        ...decodedTokenFromLogin, // Use the already decoded token
+        id: decodedTokenFromLogin.id || decodedTokenFromLogin.empCode,
+        profilePic: decodedTokenFromLogin.profilepic // Use profilepic from token (lowercase 'p')
+      };
+      localStorage.setItem('user', JSON.stringify(userToStore));
+      console.warn('Failed to fetch full user profile after login, falling back to decoded token.');
+    }
     return Promise.resolve(token);
   } catch (error) {
     console.error("Login failed:", error);

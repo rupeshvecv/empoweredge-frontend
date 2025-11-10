@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import React from "react";
 import authService from '../services/authService'; // Import authService
 import { jwtDecode } from 'jwt-decode';
+import { FiEdit } from 'react-icons/fi';
+import { usersApi, uploadApi } from "../services/masterService";
 
 export default function Header() {
   const [animate, setAnimate] = useState(false);
@@ -18,7 +20,11 @@ export default function Header() {
       if (token) {
         const decoded = jwtDecode(token);
         const stored = authService.getCurrentUser();
-        return { ...decoded, profilePic: decoded.profilePic || stored?.profilePic };
+        // Prefer stored user values (particularly `id`) when available so we don't
+        // accidentally derive an id from the token subject (which may be a username
+        // like 'askushwah2' and incorrectly yield '2'). Merge so stored values
+        // overwrite decoded where present.
+        return { ...(decoded || {}), ...(stored || {}), profilePic: decoded.profilePic || stored?.profilePic };
       }
     } catch (e) {
       console.error('Failed to decode token on init:', e);
@@ -33,7 +39,11 @@ export default function Header() {
         if (token) {
           const decoded = jwtDecode(token);
           const stored = authService.getCurrentUser();
-          setCurrentUser({ ...decoded, profilePic: decoded.profilePic || stored?.profilePic });
+          // Prefer stored user values (particularly `id`) when available so we don't
+          // accidentally derive an id from the token subject (which may be a username
+          // like 'askushwah2' and incorrectly yield '2'). Merge so stored values
+          // overwrite decoded where present.
+          setCurrentUser({ ...(decoded || {}), ...(stored || {}), profilePic: decoded.profilePic || stored?.profilePic });
           return;
         }
       } catch (e) {
@@ -63,7 +73,64 @@ export default function Header() {
     // If it starts with a slash, prefix with origin (this helps when backend returns a path)
     if (pic.startsWith('/')) return window.location.origin + pic;
     // Otherwise return as-is
+    console.log("URL:",pic);
+    
     return pic;
+  };
+
+  // file input ref for header upload
+  const fileInputRef = useRef(null);
+
+  const handleHeaderFileChange = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    // Prefer the persisted user id from localStorage (authService.getCurrentUser())
+    // because the decoded token's `sub` may be a username (not numeric).
+    const storedUser = authService.getCurrentUser();
+    const userName = storedUser?.userName || currentUser?.userName || currentUser?.sub; // Use userName or sub as fallback
+    console.log("DEBUG: storedUser?.userName:", storedUser?.userName);
+    console.log("DEBUG: currentUser?.userName:", currentUser?.userName);
+    console.log("DEBUG: currentUser?.sub:", currentUser?.sub);
+    console.log("DEBUG: userName (for upload):", userName);
+
+    if (!userName) {
+      alert('Cannot upload profile picture: username not available');
+      return;
+    }
+    // Debug: log upload attempt details
+    try {
+      const token = authService.getToken();
+      if (token) {
+        const decodedToken = jwtDecode(token);
+        console.log("DEBUG (decrypted token):", decodedToken);
+      }
+      console.debug('Uploading profile pic', { userName, fileName: file.name, fileSize: file.size, token: token ? token.replace(/(.{8}).+(.{8})/, '$1...$2') : null });
+
+      await uploadApi.uploadProfilePic(userName, file);
+
+      // refresh user data and update local storage
+      const { data } = await usersApi.getUserByUserName(userName); // Fetch user data by userName
+      try {
+        localStorage.setItem('user', JSON.stringify(data));
+      } catch (err) {
+        console.warn('Failed to update localStorage user after upload', err);
+      }
+      // notify other parts of app
+      window.dispatchEvent(new Event('userUpdated'));
+      // update local state immediately
+      setCurrentUser(prev => ({ ...prev, profilePic: data.profilePic }));
+    } catch (err) {
+      console.error('Header upload failed', err);
+      // Provide more details from axios response when available
+      const status = err?.response?.status;
+      const respData = err?.response?.data;
+      const respHeaders = err?.response?.headers;
+      console.debug('Upload error details', { status, respData, respHeaders });
+      alert(`Failed to upload profile picture: ${err?.message || err} (status: ${status || 'unknown'})`);
+    } finally {
+      // clear the input so same file can be reselected
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleLogout = () => {
@@ -98,27 +165,44 @@ export default function Header() {
           Welcome, {currentUser?.firstName}{currentUser?.lastName ? ` ${currentUser.lastName}` : ''} ({currentUser?.department})
         </span>
 
-        <button type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="hover:text-gray-200"
-        >
-          {currentUser?.profilePic ? (
-            <img
-              src={getProfilePicUrl(currentUser.profilePic)}
-              alt="profile"
-              className="h-8 w-8 rounded-full object-cover"
-              onError={(e) => { console.warn('Header profile image failed to load:', e); e.currentTarget.src = ''; }}
-            />
-          ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 fill-current"
-              viewBox="0 0 20 20"
-            >
-              <path d="M10 12a5 5 0 100-10 5 5 0 000 10zm-7 7a7 7 0 0114 0H3z" />
-            </svg>
-          )}
-        </button>
+        <div className="relative">
+          <button type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="hover:text-gray-200"
+            aria-label="User menu"
+          >
+            {currentUser?.profilePic ? (
+              <img
+                src={getProfilePicUrl(currentUser.profilePic)}
+                alt="profile"
+                className="h-12 w-12 rounded-full object-cover"
+                onError={(e) => { console.warn('Header profile image failed to load:', e); e.currentTarget.src = ''; }}
+              />
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-10 w-10 fill-current"
+                viewBox="0 0 20 20"
+              >
+                <path d="M10 12a5 5 0 100-10 5 5 0 000 10zm-7 7a7 7 0 0114 0H3z" />
+              </svg>
+            )}
+          </button>
+
+          {/* Pen icon overlay to trigger upload - positioned bottom-right of avatar */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current && fileInputRef.current.click()}
+            title="Upload profile picture"
+            className="absolute bottom-3 -right-0 transform translate-x-1/4 translate-y-1/4 bg-white rounded-full p-1 text-blue-600 hover:text-blue-800 shadow"
+            style={{ lineHeight: 0 }}
+            aria-label="Upload profile picture"
+          >
+            <FiEdit size={14} />
+          </button>
+
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleHeaderFileChange} />
+        </div>
 
         {open && (
           <div className="absolute right-0 top-10 w-40 bg-white text-black rounded shadow-lg border z-50 text-sm">

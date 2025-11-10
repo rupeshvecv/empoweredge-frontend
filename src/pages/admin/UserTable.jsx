@@ -241,18 +241,19 @@ export default function UserTable() {
           <thead>
             <tr>
               { [
-      "Emp Code", "userName", "Email", "contactNo",
-      "firstName", "middleName", "lastName", "Status", "Department", "Superior",
-      "Designation", "HRBP", "Originated", // Reverted hrbp to HRBP
-                "Role", "Location", "Profile Pic", "Actions" // <-- Added columns
-    ].map(h => (
-      <th key={h} className="p-2 border">{h}</th>
-    ))}
+                "ID", "Emp Code", "userName", "Email", "contactNo",
+                "firstName", "middleName", "lastName", "Status", "Department", "Superior",
+                "Designation", "HRBP", "Originated", // Reverted hrbp to HRBP
+                          "Role", "Location", "Profile Pic", "Actions" // <-- Added columns
+              ].map(h => (
+                <th key={h} className="p-2 border">{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {mode === "add-inline" && (
               <tr>
+                          <td className="p-2 border">—</td>
                 <td className="p-2 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" /></td>
@@ -460,6 +461,7 @@ export default function UserTable() {
                   </tr>
                 ) : (
                   <tr key={u.id}>
+                    <td className="p-2 border">{u.id}</td>
                     <td className="p-2 border">{u.empCode}</td>
                     <td className="p-2 border">{u.userName}</td>
                     <td className="p-2 border">{u.email}</td>
