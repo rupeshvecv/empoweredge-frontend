@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash2, FiUpload } from "react-icons/fi";
 import { usersApi, hrbpApi, rolesApi, departmentsApi, designationsApi, statusesApi, locationsApi, uploadApi } from "../../services/masterService"; // Import all necessary APIs
-import authService from "../../services/authService";
 import Pagination from "../../components/Pagination"; // Import Pagination component
 
 export default function UserTable() {
@@ -14,6 +13,7 @@ export default function UserTable() {
   const [statuses, setStatuses] = useState([]);
   const [locations, setLocations] = useState([]); // Add locations state
   const [hrbpUsers, setHrbpUsers] = useState([]); // Add hrbpUsers state
+  const [mastersLoaded, setMastersLoaded] = useState(false);
   const [mode, setMode] = useState(null);
   const [editing, setEditing] = useState(null);
 
@@ -51,42 +51,59 @@ export default function UserTable() {
   };
 
   useEffect(() => {
-    Promise.all([
-      usersApi.getAllUsers(),
-      rolesApi.getAllRoles(),
-      departmentsApi.getAllDepartments(),
-      designationsApi.getAllDesignations(),
-      statusesApi.getAllStatuses(),
-      locationsApi.getAllLocations(),
-    ])
-      .then(([u, r, d, de, s, l]) => {
-        console.log("Departments:", d.data);
-        console.log("Designations:", de.data);
-        setAllUsers(u.data); // Set all fetched users
-        setRoles(r.data);
-        setDepartments(d.data);
-        setDesignations(de.data);
-        setStatuses(s.data);
-        setLocations(l.data);
-
-        // Find the HRBP department ID
-        const hrbpDepartment = d.data.find(dept => dept.departmentName === "HRBP");
-        if (hrbpDepartment) {
-          // Filter all users to find those belonging to the HRBP department
-          const hrbpUsersFiltered = u.data.filter(user => user.departmentId === hrbpDepartment.id);
-          setHrbpUsers(hrbpUsersFiltered);
-          console.log("Filtered HRBP Users:", hrbpUsersFiltered);
-        } else {
-          setHrbpUsers([]);
-          console.log("HRBP department not found.");
-        }
-
-        updateDisplayedUsers(u.data, currentPage); // Initialize displayed users
+    // Only fetch users on initial load. Master lists (statuses, departments, roles, etc.)
+    // will be fetched lazily when entering add or edit mode.
+    usersApi.getAllUsers()
+      .then(u => {
+        setAllUsers(u.data);
+        updateDisplayedUsers(u.data, currentPage);
       })
       .catch(error => {
-        console.error("Error fetching master data:", error);
+        console.error("Error fetching users:", error);
       });
   }, []);
+
+  // Load master data when needed (on add/edit). This prevents fetching them on initial page load.
+  async function loadMasters() {
+    if (mastersLoaded) return;
+    try {
+      // Ensure we have users available for HRBP filtering
+      let usersData = allUsers;
+      if (!usersData || usersData.length === 0) {
+        const u = await usersApi.getAllUsers();
+        usersData = u.data;
+        setAllUsers(usersData);
+        updateDisplayedUsers(usersData, currentPage);
+      }
+
+      const [r, d, de, s, l] = await Promise.all([
+        rolesApi.getAllRoles(),
+        departmentsApi.getAllDepartments(),
+        designationsApi.getAllDesignations(),
+        statusesApi.getAllStatuses(),
+        locationsApi.getAllLocations(),
+      ]);
+
+      setRoles(r.data);
+      setDepartments(d.data);
+      setDesignations(de.data);
+      setStatuses(s.data);
+      setLocations(l.data);
+
+      // Compute HRBP users (users in HRBP department)
+      const hrbpDepartment = d.data.find(dept => dept.departmentName === "HRBP");
+      if (hrbpDepartment) {
+        const hrbpUsersFiltered = usersData.filter(user => user.departmentId === hrbpDepartment.id);
+        setHrbpUsers(hrbpUsersFiltered);
+      } else {
+        setHrbpUsers([]);
+      }
+
+      setMastersLoaded(true);
+    } catch (error) {
+      console.error("Error loading master data:", error);
+    }
+  }
 
   // Effect to update displayed users when currentPage or allUsers changes
   useEffect(() => {
@@ -116,8 +133,8 @@ export default function UserTable() {
     const payload = {
       empCode: form.empCode,
       userName: form.userName,
-      // Default password for every newly created user
-      password: 'Edc@2025',
+      // Default password for newly created users
+      password: "Edc@2025",
       profilePic: form.profilePic || null,
       firstName: form.firstName,
       middleName: form.middleName,
@@ -163,12 +180,32 @@ export default function UserTable() {
     setAllUsers(prev => prev.filter(u => u.id !== id)); // Update allUsers
   }
 
-  function openAddInline() {
+  // Handle file input change for profile pic upload
+  async function handleFileChange(e, userId) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      // upload file
+      await uploadApi.uploadProfilePic(userId, file);
+      // refresh the user to get updated profilePic path
+      const { data } = await usersApi.getUserById(userId);
+      setAllUsers(prev => prev.map(u => (u.id === data.id ? data : u)));
+      // update current page slice as well
+      setUsers(prev => prev.map(u => (u.id === data.id ? data : u)));
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Failed to upload profile picture: " + (err.message || err));
+    }
+  }
+
+  async function openAddInline() {
+    await loadMasters();
     setForm(empty);
     setMode("add-inline");
   }
 
-  function openEditInline(user) {
+  async function openEditInline(user) {
+    await loadMasters();
     setEditing(user);
     setForm({
       ...empty,
@@ -204,19 +241,18 @@ export default function UserTable() {
           <thead>
             <tr>
               { [
-              "ID", "Emp Code", "userName", "Email", "contactNo",
-              "firstName", "middleName", "lastName", "Status", "Department", "Superior",
-              "Designation", "HRBP", "Originated", // Reverted hrbp to HRBP
-              "Role", "Location", "Profile Pic", "Actions" // Password column removed
-            ].map(h => (
-              <th key={h} className="p-2 border">{h}</th>
-            ))}
+      "Emp Code", "userName", "Email", "contactNo",
+      "firstName", "middleName", "lastName", "Status", "Department", "Superior",
+      "Designation", "HRBP", "Originated", // Reverted hrbp to HRBP
+                "Role", "Location", "Profile Pic", "Actions" // <-- Added columns
+    ].map(h => (
+      <th key={h} className="p-2 border">{h}</th>
+    ))}
             </tr>
           </thead>
           <tbody>
             {mode === "add-inline" && (
               <tr>
-                <td className="p-2 border">—</td>
                 <td className="p-2 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" /></td>
@@ -275,6 +311,18 @@ export default function UserTable() {
                   </select>
                 </td>
                 <td className="p-2 border"><input type="date" value={form.originated} onChange={e => setForm(f => ({ ...f, originated: e.target.value }))} className="input" /></td>
+                 <td className="p-2 border">
+                  <select
+                    value={form.location}
+                    onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                    className="input"
+                  >
+                    <option value="">-- Select Location --</option>
+                    {locations.map(loc => (
+                      <option key={loc.id} value={loc.id}>{loc.locationName}</option>
+                    ))}
+                  </select>
+                </td>
                 <td className="p-2 border">
                   <select
                     multiple
@@ -290,35 +338,13 @@ export default function UserTable() {
                     {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
                   </select>
                 </td>
-                <td className="p-2 border">
-                  <select
-                    value={form.location}
-                    onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                    className="input"
-                  >
-                    <option value="">-- Select Location --</option>
-                    {locations.map(loc => (
-                      <option key={loc.id} value={loc.id}>{loc.locationName}</option>
-                    ))}
-                  </select>
-                </td>
 
                 <td className="p-2 border">
                   <div className="flex items-center gap-2">
-                    {/* Display current profile pic or placeholder */}
-                    {form.profilePic ? (
-                      <img src={form.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10 12a5 0 100-10 5 5 0 000 10zm-7 7a7 7 0 0114 0H3z" />
-                      </svg>
-                    )}
-                    {/* Input for profile pic URL */}
-                    <input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input flex-grow" placeholder="Profile Picture URL" />
-                    {/* Upload icon (only for existing users, so not needed in add mode) */}
+                    <input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input" />
+                    {/* For new users we cannot upload until user is created (no id) */}
                   </div>
                 </td>
-                {/* Password input removed - default password will be used for new users */}
                 <td className="p-2 border flex gap-2">
                   <button onClick={close} className="btn-light">Cancel</button>
                   <button onClick={add} className="btn-primary">Save</button>
@@ -334,7 +360,6 @@ export default function UserTable() {
               return (
                 mode === "edit-inline" && editing?.id === u.id ? (
                   <tr key={u.id} className="bg-yellow-50">
-                    <td className="p-2 border">{u.id}</td>
                     <td className="p-2 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input" /></td>
                     <td className="p-2 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input" /></td>
                     <td className="p-2 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" /></td>
@@ -388,6 +413,18 @@ export default function UserTable() {
                     <td className="p-2 border"><input type="date" value={form.originated} onChange={e => setForm(f => ({ ...f, originated: e.target.value }))} className="input" /></td>
                     <td className="p-2 border">
                       <select
+                        value={form.location}
+                        onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                        className="input"
+                      >
+                        <option value="">-- Select Location --</option>
+                        {locations.map(loc => (
+                          <option key={loc.id} value={loc.id}>{loc.locationName}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="p-2 border">
+                      <select
                         multiple
                         value={form.roleIds}
                         onChange={e =>
@@ -401,21 +438,21 @@ export default function UserTable() {
                         {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
                       </select>
                     </td>
-                    <td className="p-2 border">
-                      <select
-                        value={form.location}
-                        onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                        className="input"
-                      >
-                        <option value="">-- Select Location --</option>
-                        {locations.map(loc => (
-                          <option key={loc.id} value={loc.id}>{loc.locationName}</option>
-                        ))}
-                      </select>
-                    </td>
 
-                    <td className="p-2 border"><input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input" /></td>
-                    {/* Password input removed from edit - password isn't editable here */}
+                    <td className="p-2 border">
+                      <div className="flex items-center gap-2">
+                        {form.profilePic ? (
+                          <img src={form.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
+                        ) : (
+                          <div className="w-8 h-8 bg-gray-100 rounded-full" />
+                        )}
+                        <label className="cursor-pointer text-blue-600">
+                          <input type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, editing?.id)} />
+                          <FiUpload size={18} />
+                        </label>
+                        <input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input" />
+                      </div>
+                    </td>
                     <td className="p-2 border flex gap-2">
                       <button onClick={close} className="btn-light">Cancel</button>
                       <button onClick={save} className="btn-primary">Update</button>
@@ -423,7 +460,6 @@ export default function UserTable() {
                   </tr>
                 ) : (
                   <tr key={u.id}>
-                    <td className="p-2 border">{u.id}</td>
                     <td className="p-2 border">{u.empCode}</td>
                     <td className="p-2 border">{u.userName}</td>
                     <td className="p-2 border">{u.email}</td>
@@ -431,47 +467,15 @@ export default function UserTable() {
                     <td className="p-2 border">{u.firstName}</td>
                     <td className="p-2 border">{u.middleName}</td>
                     <td className="p-2 border">{u.lastName}</td>
+                    <td className="p-2 border">{u.statusName || ""}</td>
+                    <td className="p-2 border">{u.departmentName || ""}</td>
+                    <td className="p-2 border">{u.superiorName || ""}</td>
+                    <td className="p-2 border">{u.designationName || ""}</td>
+                    <td className="p-2 border">{u.hrbpName || ""}</td>
                     <td className="p-2 border">
                       {(() => {
-                        const statusId = u.statusId;
-                        const statusObj = statuses.find(s => String(s.id) === String(statusId));
-                        return statusObj ? statusObj.statusName : "";
-                      })()}
-                    </td>
-                    <td className="p-2 border">
-                      {(() => {
-                        const deptId = u.departmentId;
-                        const deptObj = departments.find(d => String(d.id) === String(deptId));
-                        return deptObj ? deptObj.departmentName : "";
-                      })()}
-                    </td>
-                    <td className="p-2 border">
-                      {
-                        (() => {
-                          if (!u.superiorId) return "";
-                          const superiorUser = users.find(user => String(user.id) === String(u.superiorId));
-                          return superiorUser ? superiorUser.userName : "";
-                        })()
-                      }
-                    </td>
-                    <td className="p-2 border">
-                      {(() => {
-                        const desigId = u.designationId;
-                        const desigObj = designations.find(d => String(d.id) === String(desigId));
-                        return desigObj ? desigObj.designationName : "";
-                      })()}
-                    </td>
-                    <td className="p-2 border">
-                      {
-                        (() => {
-                          if (!u.hrbpId) return ""; // Reverted from HRBPId to hrbpId
-                          const hrbpUser = hrbpUsers.find(user => String(user.id) === String(u.hrbpId)); // Reverted from HRBPId to hrbpId
-                          return hrbpUser ? hrbpUser.userName : "";
-                        })()
-                      }
-                    </td>
-                    <td className="p-2 border">
-                      {(() => {
+                        // Use originatedName if API provides it, else format originated (no master lookup)
+                        if (u.originatedName) return u.originatedName;
                         if (!u.originated) return "";
                         const dateObj = new Date(u.originated);
                         const dateStr = dateObj.toLocaleDateString();
@@ -481,84 +485,26 @@ export default function UserTable() {
                     </td> {/* Originated column */}
                     <td className="p-2 border">
                       {(() => {
-                        const roleIds = Array.isArray(u.roleIds) ? u.roleIds : [u.roleIds];
-                        const roleNames = roles
-                          .filter(r => roleIds.includes(r.id))
-                          .map(r => r.roleName)
-                          .join(', ');
-                        return roleNames;
+                        // Prefer API-provided roleNames array or roleName string; do not query master lists for display
+                        if (Array.isArray(u.roleNames) && u.roleNames.length) return u.roleNames.join(', ');
+                        if (u.roleName) return u.roleName;
+                        return "";
                       })()}
                     </td> {/* Role column */}
+                    <td className="p-2 border">{u.locationName || ""}</td>
                     <td className="p-2 border">
-                      {(() => {
-                        const locationId = u.location;
-                        const locationObj = locations.find(l => String(l.id) === String(locationId));
-                        return locationObj ? locationObj.locationName : "";
-                      })()}
+                      <div className="flex items-center gap-2">
+                        {u.profilePic ? (
+                          <img src={u.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
+                        ) : (
+                          <div className="w-8 h-8 bg-gray-100 rounded-full" />
+                        )}
+                        <label className="cursor-pointer text-blue-600">
+                          <input type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, u.id)} />
+                          <FiUpload size={18} />
+                        </label>
+                      </div>
                     </td>
-                                    <td className="p-2 border">
-                                      {mode === "edit-inline" && editing?.id === u.id ? (
-                                        <div className="flex items-center gap-2">
-                                          {/* Display current profile pic or placeholder */}
-                                          {form.profilePic ? (
-                                            <img src={form.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
-                                          ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                                              <path d="M10 12a5 0 100-10 5 5 0 000 10zm-7 7a7 7 0 0114 0H3z" />
-                                            </svg>
-                                          )}
-                                          {/* Input for profile pic URL */}
-                                          <input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input flex-grow" placeholder="Profile Picture URL" />
-                                          {/* Upload icon */}
-                                          <label htmlFor={`upload-${u.id}`} className="relative cursor-pointer" title={`Upload profile for ${u.userName}`}>
-                                            <span className="bg-white p-1 rounded-full border shadow-sm" title="Upload profile picture">
-                                              <FiUpload size={18} className="text-blue-600" />
-                                            </span>
-                                            <input
-                                              id={`upload-${u.id}`}
-                                              type="file"
-                                              accept="image/*"
-                                              className="hidden"
-                                              aria-label={`Upload profile picture for ${u.userName}`}
-                                              onChange={async (e) => {
-                                                const file = e.target.files && e.target.files[0];
-                                                if (!file) return;
-                                                try {
-                                                  await uploadApi.uploadProfilePic(u.id, file);
-                                                  const { data: refreshed } = await usersApi.getUserById(u.id);
-                                                  setAllUsers(prev => prev.map(x => x.id === refreshed.id ? refreshed : x));
-                                                  setForm(f => ({ ...f, profilePic: refreshed.profilePic })); // Update form state
-                                                  try {
-                                                    const cur = authService.getCurrentUser();
-                                                    if (cur && (cur.id === refreshed.id || String(cur.id) === String(refreshed.id))) {
-                                                      const merged = { ...cur, profilePic: refreshed.profilePic };
-                                                      localStorage.setItem('user', JSON.stringify(merged));
-                                                      window.dispatchEvent(new Event('userUpdated'));
-                                                    }
-                                                  } catch (err) {
-                                                    console.error('Could not update current user in localStorage:', err);
-                                                  }
-                                                } catch (err) {
-                                                  console.error('Upload failed', err);
-                                                  alert('Profile upload failed');
-                                                }
-                                              }}
-                                            />
-                                          </label>
-                                        </div>
-                                      ) : (
-                                        <div className="inline-block">
-                                          {u.profilePic ? (
-                                            <img src={u.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
-                                          ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                                              <path d="M10 12a5 0 100-10 5 5 0 000 10zm-7 7a7 7 0 0114 0H3z" />
-                                            </svg>
-                                          )}
-                                          {u.profilePic && <span className="block text-xs text-gray-500 break-all">{u.profilePic}</span>}
-                                        </div>
-                                      )}
-                                    </td>
                     <td className="p-2 border flex gap-2">
                       <button
                         onClick={() => openEditInline(u)}
