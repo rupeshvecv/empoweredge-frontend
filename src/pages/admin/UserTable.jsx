@@ -36,7 +36,7 @@ export default function UserTable() {
     designationId: "",
     hrbpId: "", // Reverted from HRBPId to hrbpId
     roleIds: [],
-    location: "",   // <-- Add location
+    locationId: "",   // Use locationId to match API
   };
   const [form, setForm] = useState(empty);
   const navigate = useNavigate();
@@ -139,13 +139,12 @@ export default function UserTable() {
       email: form.email,
       contactNo: form.contactNo.trim(),
       roleIds: form.roleIds.map(Number),
-      location: form.location ? Number(form.location) : null,
+      locationId: form.locationId ? Number(form.locationId) : null, // Use locationId
       statusId: form.statusId ? Number(form.statusId) : null,
       superiorId: form.superiorId ? Number(form.superiorId) : null,
-      hrbpId: form.hrbpId ? Number(form.hrbpId) : null, // Reverted from HRBPId to hrbpId
+      hrbpId: form.hrbpId ? Number(form.hrbpId) : null,
       departmentId: form.departmentId ? Number(form.departmentId) : null,
       designationId: form.designationId ? Number(form.designationId) : null,
-      
     };
     try {
       const { data } = await usersApi.createUser(payload);
@@ -163,9 +162,8 @@ export default function UserTable() {
       statusId: Number(form.statusId),
       departmentId: Number(form.departmentId),
       designationId: Number(form.designationId),
-       roleIds: form.roleIds.map(Number),
-      location: Number(form.location),
-     
+      roleIds: form.roleIds.map(Number),
+      locationId: Number(form.locationId), // Use locationId
     };
     const { data } = await usersApi.updateUser(editing.id, payload);
     setAllUsers(prev => prev.map(u => (u.id === data.id ? data : u))); // Update allUsers
@@ -193,12 +191,11 @@ export default function UserTable() {
       ...user,
       statusId: user.statusId || "",
       superiorId: user.superiorId || "",
-      hrbpId: user.hrbpId || "", // Reverted from HRBPId to hrbpId
+      hrbpId: user.hrbpId || "",
       departmentId: user.departmentId || "",
       designationId: user.designationId || "",
-      
-      roleIds: user.roles?.map(r => r.id) || [], // Extract role IDs into an array
-      location: user.location || "",
+      roleIds: user.roles?.map(r => r.id) || [],
+      locationId: user.locationId || "", // Populate from user.locationId
     });
     setMode("edit-inline");
   }
@@ -308,8 +305,8 @@ export default function UserTable() {
                 </td>
                  <td className="p-2 border">
                   <select
-                    value={form.location}
-                    onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                    value={form.locationId} // Use form.locationId
+                    onChange={e => setForm(f => ({ ...f, locationId: e.target.value }))} // Update locationId
                     className="input"
                   >
                     <option value="">-- Select Location --</option>
@@ -398,8 +395,8 @@ export default function UserTable() {
                     </td>
                        <td className="p-2 border">
                       <select
-                        value={form.location}
-                        onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                        value={form.locationId} // Use form.locationId
+                        onChange={e => setForm(f => ({ ...f, locationId: e.target.value }))} // Update locationId
                         className="input"
                       >
                         <option value="">-- Select Location --</option>
