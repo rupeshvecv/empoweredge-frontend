@@ -113,7 +113,7 @@ export default function UserTable() {
     if (form.hrbpId) {
       hrbpApi.getActiveUsersByHrbpId(form.hrbpId)
         .then(response => {
-          console.log(`Active users for HRBP ${form.hrbpId}:`, response.data);
+          // console.log(`Active users for HRBP ${form.hrbpId}:`, response.data);
           // You could set a state here to display these users,
           // but for now, we'll just log them to demonstrate API usage.
         })
@@ -138,13 +138,14 @@ export default function UserTable() {
       lastName: form.lastName,
       email: form.email,
       contactNo: form.contactNo.trim(),
+      roleIds: form.roleIds.map(Number),
       location: form.location ? Number(form.location) : null,
       statusId: form.statusId ? Number(form.statusId) : null,
       superiorId: form.superiorId ? Number(form.superiorId) : null,
       hrbpId: form.hrbpId ? Number(form.hrbpId) : null, // Reverted from HRBPId to hrbpId
       departmentId: form.departmentId ? Number(form.departmentId) : null,
       designationId: form.designationId ? Number(form.designationId) : null,
-      roleIds: form.roleIds.map(Number),
+      
     };
     try {
       const { data } = await usersApi.createUser(payload);
@@ -162,8 +163,9 @@ export default function UserTable() {
       statusId: Number(form.statusId),
       departmentId: Number(form.departmentId),
       designationId: Number(form.designationId),
+       roleIds: form.roleIds.map(Number),
       location: Number(form.location),
-      roleIds: form.roleIds.map(Number),
+     
     };
     const { data } = await usersApi.updateUser(editing.id, payload);
     setAllUsers(prev => prev.map(u => (u.id === data.id ? data : u))); // Update allUsers
@@ -194,8 +196,9 @@ export default function UserTable() {
       hrbpId: user.hrbpId || "", // Reverted from HRBPId to hrbpId
       departmentId: user.departmentId || "",
       designationId: user.designationId || "",
-      location: user.location || "",
+      
       roleIds: user.roles?.map(r => r.id) || [], // Extract role IDs into an array
+      location: user.location || "",
     });
     setMode("edit-inline");
   }
@@ -215,8 +218,8 @@ export default function UserTable() {
             <button onClick={openAddInline} className="btn-primary">Add User</button>
           </div>
         </div>
-        <table className="table w-full min-w-full text-xs"> {/* User Management Table */}
-          <thead>
+        {/* User Management Table */}
+        <table className="table w-full min-w-full text-xs"><thead>
             <tr>
               { [
                 "ID", "Emp Code", "userName", "Email", "contactNo",
@@ -227,11 +230,9 @@ export default function UserTable() {
                 <th key={h} className="p-2 border">{h}</th>
               ))}
             </tr>
-          </thead>
-          <tbody>
+          </thead><tbody>
             {mode === "add-inline" && (
-              <tr>
-                          <td className="p-2 border">—</td>
+              <tr><td className="p-2 border">—</td>
                 <td className="p-2 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input" /></td>
                 <td className="p-2 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" /></td>
@@ -289,18 +290,7 @@ export default function UserTable() {
                     ))}
                   </select>
                 </td>
-                 <td className="p-2 border">
-                  <select
-                    value={form.location}
-                    onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                    className="input"
-                  >
-                    <option value="">-- Select Location --</option>
-                    {locations.map(loc => (
-                      <option key={loc.id} value={loc.id}>{loc.locationName}</option>
-                    ))}
-                  </select>
-                </td>
+                
                 <td className="p-2 border">
                   <select
                     multiple
@@ -316,6 +306,18 @@ export default function UserTable() {
                     {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
                   </select>
                 </td>
+                 <td className="p-2 border">
+                  <select
+                    value={form.location}
+                    onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                    className="input"
+                  >
+                    <option value="">-- Select Location --</option>
+                    {locations.map(loc => (
+                      <option key={loc.id} value={loc.id}>{loc.locationName}</option>
+                    ))}
+                  </select>
+                </td>
 
                 <td className="p-2 border flex gap-2">
                   <button onClick={close} className="btn-light">Cancel</button>
@@ -327,7 +329,7 @@ export default function UserTable() {
             {users.map(u => {
               return (
                 mode === "edit-inline" && editing?.id === u.id ? (
-                  <tr key={u.id} className="bg-yellow-50">
+                  <tr key={u.id} className="bg-yellow-50"><td className="p-2 border">{editing?.id}</td>
                     <td className="p-2 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input" /></td>
                     <td className="p-2 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input" /></td>
                     <td className="p-2 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" /></td>
@@ -378,18 +380,7 @@ export default function UserTable() {
                     ))}
                   </select>
                 </td>
-                    <td className="p-2 border">
-                      <select
-                        value={form.location}
-                        onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                        className="input"
-                      >
-                        <option value="">-- Select Location --</option>
-                        {locations.map(loc => (
-                          <option key={loc.id} value={loc.id}>{loc.locationName}</option>
-                        ))}
-                      </select>
-                    </td>
+                 
                     <td className="p-2 border">
                       <select
                         multiple
@@ -405,6 +396,18 @@ export default function UserTable() {
                         {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
                       </select>
                     </td>
+                       <td className="p-2 border">
+                      <select
+                        value={form.location}
+                        onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                        className="input"
+                      >
+                        <option value="">-- Select Location --</option>
+                        {locations.map(loc => (
+                          <option key={loc.id} value={loc.id}>{loc.locationName}</option>
+                        ))}
+                      </select>
+                    </td>
 
                     <td className="p-2 border flex gap-2">
                       <button onClick={close} className="btn-light">Cancel</button>
@@ -412,8 +415,7 @@ export default function UserTable() {
                     </td>
                   </tr>
                 ) : (
-                  <tr key={u.id}>
-                    <td className="p-2 border">{u.id}</td>
+                  <tr key={u.id}><td className="p-2 border">{u.id}</td>
                     <td className="p-2 border">{u.empCode}</td>
                     <td className="p-2 border">{u.userName}</td>
                     <td className="p-2 border">{u.email}</td>
@@ -433,7 +435,7 @@ export default function UserTable() {
                         if (u.roleName) return u.roleName;
                         return "";
                       })()}
-                    </td> {/* Role column */}
+                    </td>
                     <td className="p-2 border">{u.locationName || ""}</td>
                     <td className="p-2 border flex gap-2">
                       <button
@@ -450,13 +452,12 @@ export default function UserTable() {
                       >
                         <FiTrash2 size={18} />
                       </button>
-                    </td> {/* Actions column */}
+                    </td>
                   </tr>
                 )
               )
             })}
-          </tbody>
-        </table>
+          </tbody></table>
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
