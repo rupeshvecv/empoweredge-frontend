@@ -35,9 +35,7 @@ export default function UserTable() {
     departmentId: "",
     designationId: "",
     hrbpId: "", // Reverted from HRBPId to hrbpId
-    originated: "",
     roleIds: [],
-    profilePic: "", // <-- Add profilePic
     location: "",   // <-- Add location
   };
   const [form, setForm] = useState(empty);
@@ -135,14 +133,12 @@ export default function UserTable() {
       userName: form.userName,
       // Default password for newly created users
       password: "Edc@2025",
-      profilePic: form.profilePic || null,
       firstName: form.firstName,
       middleName: form.middleName,
       lastName: form.lastName,
       email: form.email,
       contactNo: form.contactNo.trim(),
       location: form.location ? Number(form.location) : null,
-      originated: form.originated ? form.originated : null, // "YYYY-MM-DD"
       statusId: form.statusId ? Number(form.statusId) : null,
       superiorId: form.superiorId ? Number(form.superiorId) : null,
       hrbpId: form.hrbpId ? Number(form.hrbpId) : null, // Reverted from HRBPId to hrbpId
@@ -181,23 +177,6 @@ export default function UserTable() {
   }
 
   // Handle file input change for profile pic upload
-  async function handleFileChange(e, userId) {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    try {
-      // upload file
-      await uploadApi.uploadProfilePic(userId, file);
-      // refresh the user to get updated profilePic path
-      const { data } = await usersApi.getUserById(userId);
-      setAllUsers(prev => prev.map(u => (u.id === data.id ? data : u)));
-      // update current page slice as well
-      setUsers(prev => prev.map(u => (u.id === data.id ? data : u)));
-    } catch (err) {
-      console.error("Upload failed:", err);
-      alert("Failed to upload profile picture: " + (err.message || err));
-    }
-  }
-
   async function openAddInline() {
     await loadMasters();
     setForm(empty);
@@ -217,7 +196,6 @@ export default function UserTable() {
       designationId: user.designationId || "",
       location: user.location || "",
       roleIds: user.roles?.map(r => r.id) || [], // Extract role IDs into an array
-      profilePic: user.profilePic || "", // Map profilePic from user object
     });
     setMode("edit-inline");
   }
@@ -243,8 +221,8 @@ export default function UserTable() {
               { [
                 "ID", "Emp Code", "userName", "Email", "contactNo",
                 "firstName", "middleName", "lastName", "Status", "Department", "Superior",
-                "Designation", "HRBP", "Originated", // Reverted hrbp to HRBP
-                          "Role", "Location", "Profile Pic", "Actions" // <-- Added columns
+                "Designation", "HRBP",
+                          "Role", "Location", "Actions"
               ].map(h => (
                 <th key={h} className="p-2 border">{h}</th>
               ))}
@@ -264,13 +242,13 @@ export default function UserTable() {
                 <td className="p-2 border">
                   <select value={form.statusId} onChange={e => setForm(f => ({ ...f, statusId: e.target.value }))} className="input w-32">
                     <option value="">-- Select Status --</option>
-                    {statuses.map(s => <option key={s.id} value={s.id} selected={String(s.id) === String(form.statusId)}>{s.statusName}</option>)}
+                    {statuses.map(s => <option key={s.id} value={s.id}>{s.statusName}</option>)}
                   </select>
                 </td>
                 <td className="p-2 border">
                   <select value={form.departmentId} onChange={e => setForm(f => ({ ...f, departmentId: e.target.value }))} className="input w-32">
                     <option value="">-- Select Department --</option>
-                    {departments.map(d => <option key={d.id} value={d.id} selected={String(d.id) === String(form.departmentId)}>{d.departmentName}</option>)}
+                    {departments.map(d => <option key={d.id} value={d.id}>{d.departmentName}</option>)}
                   </select>
                 </td>
                     <td className="p-2 border">
@@ -288,7 +266,7 @@ export default function UserTable() {
                       // For adding, only show users from the selected department
                       return String(u.departmentId) === String(form.departmentId);
                     }).map(u => (
-                      <option key={u.id} value={u.id} selected={String(u.id) === String(form.superiorId)}>{u.userName}</option>
+                      <option key={u.id} value={u.id}>{u.userName}</option>
                     ))}
                   </select>
                 </td>
@@ -296,7 +274,7 @@ export default function UserTable() {
                 <td className="p-2 border">
                   <select value={form.designationId} onChange={e => setForm(f => ({ ...f, designationId: e.target.value }))} className="input w-32">
                     <option value="">-- Select Designation --</option>
-                    {designations.map(d => <option key={d.id} value={d.id} selected={String(d.id) === String(form.designationId)}>{d.designationName}</option>)}
+                    {designations.map(d => <option key={d.id} value={d.id}>{d.designationName}</option>)}
                   </select>
                 </td>
                 <td className="p-2 border">
@@ -307,11 +285,10 @@ export default function UserTable() {
                   >
                     <option value="">-- Select HRBP --</option>
                     {hrbpUsers.map(u => (
-                      <option key={u.id} value={u.id} selected={String(u.id) === String(form.hrbpId)}>{u.userName}</option>
+                      <option key={u.id} value={u.id}>{u.userName}</option>
                     ))}
                   </select>
                 </td>
-                <td className="p-2 border"><input type="date" value={form.originated} onChange={e => setForm(f => ({ ...f, originated: e.target.value }))} className="input" /></td>
                  <td className="p-2 border">
                   <select
                     value={form.location}
@@ -340,12 +317,6 @@ export default function UserTable() {
                   </select>
                 </td>
 
-                <td className="p-2 border">
-                  <div className="flex items-center gap-2">
-                    <input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input" />
-                    {/* For new users we cannot upload until user is created (no id) */}
-                  </div>
-                </td>
                 <td className="p-2 border flex gap-2">
                   <button onClick={close} className="btn-light">Cancel</button>
                   <button onClick={add} className="btn-primary">Save</button>
@@ -354,10 +325,6 @@ export default function UserTable() {
             )}
 
             {users.map(u => {
-              // Log the statuses array and each user's status value
-              console.log("Statuses array:", statuses);
-              console.log("User status value:", u.status);
-
               return (
                 mode === "edit-inline" && editing?.id === u.id ? (
                   <tr key={u.id} className="bg-yellow-50">
@@ -371,14 +338,14 @@ export default function UserTable() {
                     <td className="p-2 border">
                   <select value={form.statusId} onChange={e => setForm(f => ({ ...f, statusId: e.target.value }))} className="input w-32">
                     <option value="">-- Select Status --</option>
-                    {statuses.map(s => <option key={s.id} value={s.id} selected={String(s.id) === String(form.statusId)}>{s.statusName}</option>)}
+                    {statuses.map(s => <option key={s.id} value={s.id}>{s.statusName}</option>)}
                   </select>
                 </td>
 
                     <td className="p-2 border">
                   <select value={form.departmentId} onChange={e => setForm(f => ({ ...f, departmentId: e.target.value }))} className="input w-32">
                     <option value="">-- Select Department --</option>
-                    {departments.map(d => <option key={d.id} value={d.id} selected={String(d.id) === String(form.departmentId)}>{d.departmentName}</option>)}
+                    {departments.map(d => <option key={d.id} value={d.id}>{d.departmentName}</option>)}
                   </select>
                 </td>
                     <td className="p-2 border">
@@ -396,7 +363,7 @@ export default function UserTable() {
                     <td className="p-2 border">
                   <select value={form.designationId} onChange={e => setForm(f => ({ ...f, designationId: e.target.value }))} className="input w-32">
                     <option value="">-- Select Designation --</option>
-                    {designations.map(d => <option key={d.id} value={d.id} selected={String(d.id) === String(form.designationId)}>{d.designationName}</option>)}
+                    {designations.map(d => <option key={d.id} value={d.id}>{d.designationName}</option>)}
                   </select>
                 </td>
                     <td className="p-2 border">
@@ -407,11 +374,10 @@ export default function UserTable() {
                   >
                     <option value="">-- Select HRBP --</option>
                     {hrbpUsers.map(u => (
-                      <option key={u.id} value={u.id} selected={String(u.id) === String(form.hrbpId)}>{u.userName}</option>
+                      <option key={u.id} value={u.id}>{u.userName}</option>
                     ))}
                   </select>
                 </td>
-                    <td className="p-2 border"><input type="date" value={form.originated} onChange={e => setForm(f => ({ ...f, originated: e.target.value }))} className="input" /></td>
                     <td className="p-2 border">
                       <select
                         value={form.location}
@@ -440,20 +406,6 @@ export default function UserTable() {
                       </select>
                     </td>
 
-                    <td className="p-2 border">
-                      <div className="flex items-center gap-2">
-                        {form.profilePic ? (
-                          <img src={form.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
-                        ) : (
-                          <div className="w-8 h-8 bg-gray-100 rounded-full" />
-                        )}
-                        <label className="cursor-pointer text-blue-600">
-                          <input type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, editing?.id)} />
-                          <FiUpload size={18} />
-                        </label>
-                        <input type="text" value={form.profilePic} onChange={e => setForm(f => ({ ...f, profilePic: e.target.value }))} className="input" />
-                      </div>
-                    </td>
                     <td className="p-2 border flex gap-2">
                       <button onClick={close} className="btn-light">Cancel</button>
                       <button onClick={save} className="btn-primary">Update</button>
@@ -476,17 +428,6 @@ export default function UserTable() {
                     <td className="p-2 border">{u.hrbpName || ""}</td>
                     <td className="p-2 border">
                       {(() => {
-                        // Use originatedName if API provides it, else format originated (no master lookup)
-                        if (u.originatedName) return u.originatedName;
-                        if (!u.originated) return "";
-                        const dateObj = new Date(u.originated);
-                        const dateStr = dateObj.toLocaleDateString();
-                        const timeStr = dateObj.toLocaleTimeString();
-                        return `${dateStr} ${timeStr}`;
-                      })()}
-                    </td> {/* Originated column */}
-                    <td className="p-2 border">
-                      {(() => {
                         // Prefer API-provided roleNames array or roleName string; do not query master lists for display
                         if (Array.isArray(u.roleNames) && u.roleNames.length) return u.roleNames.join(', ');
                         if (u.roleName) return u.roleName;
@@ -494,19 +435,6 @@ export default function UserTable() {
                       })()}
                     </td> {/* Role column */}
                     <td className="p-2 border">{u.locationName || ""}</td>
-                    <td className="p-2 border">
-                      <div className="flex items-center gap-2">
-                        {u.profilePic ? (
-                          <img src={u.profilePic} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
-                        ) : (
-                          <div className="w-8 h-8 bg-gray-100 rounded-full" />
-                        )}
-                        <label className="cursor-pointer text-blue-600">
-                          <input type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e, u.id)} />
-                          <FiUpload size={18} />
-                        </label>
-                      </div>
-                    </td>
                     <td className="p-2 border flex gap-2">
                       <button
                         onClick={() => openEditInline(u)}

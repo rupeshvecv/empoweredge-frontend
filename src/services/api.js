@@ -12,7 +12,7 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
     try {
       const decodedToken = jwtDecode(token);
-      console.log("Decoded JWT Token in API Interceptor:", decodedToken);
+      // console.log("Decoded JWT Token in API Interceptor:", decodedToken); // Removed as per user feedback
     } catch (error) {
       console.error("Error decoding token in API Interceptor:", error);
     }
@@ -25,7 +25,7 @@ api.interceptors.request.use((config) => {
         Authorization: config.headers?.Authorization,
         'Content-Type': config.headers?.['Content-Type'] || config.headers?.['content-type'],
       };
-      console.debug('API request:', { method: config.method, url: config.baseURL ? config.baseURL + config.url : config.url, headers: safeHeaders });
+      // console.debug('API request:', { method: config.method, url: config.baseURL ? config.baseURL + config.url : config.url, headers: safeHeaders }); // Removed as per user feedback
     }
   } catch (e) {
     // swallow
@@ -84,5 +84,8 @@ export const getLocationById = (id) => api.get(`/empoweredge/location/${id}`);
 export const addLocation = (location) => api.post("/empoweredge/location", location);
 export const updateLocation = (id, location) => api.put(`/empoweredge/location/${id}`, location);
 export const deleteLocation = (id) => api.delete(`/empoweredge/location/${id}`);
+
+// Profile Picture API calls
+export const getProfilePictureByUsername = (username) => api.get(`/empoweredge/view/profilePic/${username}`, { responseType: 'blob' });
 
 export default api;

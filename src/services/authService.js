@@ -36,7 +36,7 @@ export const resetPassword = async (email, otp, newPassword) => {
       try {
         // Assuming there's an endpoint like /api/users/profile that returns the current user's details
         // based on the JWT in the Authorization header.
-        const response = await api.get("/users/profile");
+        const response = await api.get("empoweredge/users/profile");
         console.log("DEBUG: fetchUserProfile response data:", response.data); // Add logging here
         return response.data;
       } catch (error) {

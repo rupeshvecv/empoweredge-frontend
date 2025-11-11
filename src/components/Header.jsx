@@ -6,6 +6,7 @@ import authService from '../services/authService'; // Import authService
 import { jwtDecode } from 'jwt-decode';
 import { FiEdit } from 'react-icons/fi';
 import { usersApi, uploadApi } from "../services/masterService";
+import { getProfilePictureByUsername } from "../services/api"; // Import the new API function
 
 export default function Header() {
   const [animate, setAnimate] = useState(false);
@@ -32,6 +33,8 @@ export default function Header() {
     return authService.getCurrentUser();
   });
 
+  const [profilePicDataUrl, setProfilePicDataUrl] = useState(null);
+
   useEffect(() => {
     const handler = () => {
       try {
@@ -39,10 +42,6 @@ export default function Header() {
         if (token) {
           const decoded = jwtDecode(token);
           const stored = authService.getCurrentUser();
-          // Prefer stored user values (particularly `id`) when available so we don't
-          // accidentally derive an id from the token subject (which may be a username
-          // like 'askushwah2' and incorrectly yield '2'). Merge so stored values
-          // overwrite decoded where present.
           setCurrentUser({ ...(decoded || {}), ...(stored || {}), profilePic: decoded.profilePic || stored?.profilePic });
           return;
         }
@@ -55,26 +54,54 @@ export default function Header() {
     return () => window.removeEventListener('userUpdated', handler);
   }, []);
 
-  // Debugging: log token and stored user to help diagnose missing profilePic
   useEffect(() => {
-    try {
-      const token = authService.getToken();
-      const stored = authService.getCurrentUser();
-      console.debug('Header init - token present?', !!token, 'decoded/currentUser:', currentUser, 'storedUser:', stored);
-    } catch (e) {
-      console.error('Header debug error:', e);
-    }
-  }, [currentUser]);
+    const fetchProfilePic = async () => {
+      const userName = currentUser?.userName || currentUser?.sub;
+      if (userName) {
+        try {
+          const response = await getProfilePictureByUsername(userName);
+          if (response.data) {
+            const imageUrl = URL.createObjectURL(response.data);
+            setProfilePicDataUrl(imageUrl);
+          } else {
+            setProfilePicDataUrl(null);
+          }
+        } catch (error) {
+          console.error("Failed to fetch profile picture:", error);
+          setProfilePicDataUrl(null);
+        }
+      } else {
+        setProfilePicDataUrl(null);
+      }
+    };
 
+    // Only fetch if currentUser.profilePic is not already a data URL or a direct URL
+    // and if we have a username to fetch by.
+    if (currentUser?.userName || currentUser?.sub) {
+      // If currentUser.profilePic is already a full URL, use it directly
+      if (currentUser.profilePic && /^https?:\/\//i.test(currentUser.profilePic)) {
+        setProfilePicDataUrl(currentUser.profilePic);
+      } else {
+        fetchProfilePic();
+      }
+    } else {
+      setProfilePicDataUrl(null);
+    }
+
+    // Cleanup function for object URL
+    return () => {
+      if (profilePicDataUrl) {
+        URL.revokeObjectURL(profilePicDataUrl);
+      }
+    };
+  }, [currentUser?.userName, currentUser?.sub, currentUser?.profilePic]); // Re-run when username or profilePic changes
+
+  // This function is now primarily for handling existing URL-based profilePic values
+  // from JWT or localStorage, if they exist. The fetched blob will directly set profilePicDataUrl.
   const getProfilePicUrl = (pic) => {
     if (!pic) return null;
-    // If it's already absolute, use it
     if (/^https?:\/\//i.test(pic)) return pic;
-    // If it starts with a slash, prefix with origin (this helps when backend returns a path)
     if (pic.startsWith('/')) return window.location.origin + pic;
-    // Otherwise return as-is
-    console.log("URL:",pic);
-    
     return pic;
   };
 
@@ -171,9 +198,9 @@ export default function Header() {
             className="hover:text-gray-200"
             aria-label="User menu"
           >
-            {currentUser?.profilePic ? (
+            {profilePicDataUrl ? (
               <img
-                src={getProfilePicUrl(currentUser.profilePic)}
+                src={profilePicDataUrl}
                 alt="profile"
                 className="h-12 w-12 rounded-full object-cover"
                 onError={(e) => { console.warn('Header profile image failed to load:', e); e.currentTarget.src = ''; }}
@@ -200,7 +227,7 @@ export default function Header() {
           >
             <FiEdit size={14} />
           </button>
-
+          {/* Hidden input for file selection */}
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleHeaderFileChange} />
         </div>
 
