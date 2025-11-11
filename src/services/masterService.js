@@ -9,6 +9,7 @@ export const usersApi = {
   // getAllUsers: () => api.get("/empoweredge/users"),
    getAllUsers: () => api.get("/empoweredge/allusers"),
   getUserById: (id) => api.get(`/empoweredge/users/${id}`), // Keep for existing ID-based calls if any
+  getUserByUserName: (userName) => api.get(`/empoweredge/users/username/${userName}`), // Add new function
   createUser: (data) => api.post("/empoweredge/users", data),
   updateUser: (id, data) => api.put(`/empoweredge/users/${id}`, data),
   removeUser: (id) => api.delete(`/empoweredge/users/${id}`),

@@ -115,10 +115,7 @@ export default function Header() {
     // because the decoded token's `sub` may be a username (not numeric).
     const storedUser = authService.getCurrentUser();
     const userName = storedUser?.userName || currentUser?.userName || currentUser?.sub; // Use userName or sub as fallback
-    console.log("DEBUG: storedUser?.userName:", storedUser?.userName);
-    console.log("DEBUG: currentUser?.userName:", currentUser?.userName);
-    console.log("DEBUG: currentUser?.sub:", currentUser?.sub);
-    console.log("DEBUG: userName (for upload):", userName);
+  // Debug logging removed
 
     if (!userName) {
       alert('Cannot upload profile picture: username not available');
@@ -127,11 +124,7 @@ export default function Header() {
     // Debug: log upload attempt details
     try {
       const token = authService.getToken();
-      if (token) {
-        const decodedToken = jwtDecode(token);
-        console.log("DEBUG (decrypted token):", decodedToken);
-      }
-      console.debug('Uploading profile pic', { userName, fileName: file.name, fileSize: file.size, token: token ? token.replace(/(.{8}).+(.{8})/, '$1...$2') : null });
+      // Removed verbose debug logging
 
       await uploadApi.uploadProfilePic(userName, file);
 
@@ -152,8 +145,8 @@ export default function Header() {
       const status = err?.response?.status;
       const respData = err?.response?.data;
       const respHeaders = err?.response?.headers;
-      console.debug('Upload error details', { status, respData, respHeaders });
-      alert(`Failed to upload profile picture: ${err?.message || err} (status: ${status || 'unknown'})`);
+  // Detailed debug logging removed
+      // alert(`Failed to upload profile picture: ${err?.message || err} (status: ${status || 'unknown'})`); // Removed alert as per user request
     } finally {
       // clear the input so same file can be reselected
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -184,7 +177,7 @@ export default function Header() {
       </div>
 
       <span className="absolute left-1/2 -translate-x-1/2 hidden text-2xl sm:block font-bold tracking-wide">
-        EMPOWER
+        EMPOWER 360
       </span>
 
       <div className="relative flex items-center gap-2" ref={ref}>
