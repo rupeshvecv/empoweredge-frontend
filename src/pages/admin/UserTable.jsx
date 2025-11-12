@@ -256,7 +256,7 @@ export default function UserTable() {
                     className="input w-32"
                   >
                     <option value="">-- Select Superior --</option>
-                    {users.filter(u => {
+                    {allUsers.filter(u => {
                       // For editing, show users from the selected department OR the current superior
                       if (mode === "edit-inline") {
                         return String(u.departmentId) === String(form.departmentId) || u.id === editing?.superiorId;
@@ -354,7 +354,7 @@ export default function UserTable() {
                         className="input w-32"
                       >
                         <option value="">-- Select Superior --</option>
-                        {users.filter(u => String(u.departmentId) === String(form.departmentId) || u.id === editing?.superiorId).map(u => (
+                        {allUsers.filter(u => String(u.departmentId) === String(form.departmentId) || u.id === editing?.superiorId).map(u => (
                           <option key={u.id} value={u.id}>{u.userName}</option>
                         ))}
                       </select>
