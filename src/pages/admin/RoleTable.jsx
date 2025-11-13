@@ -18,7 +18,7 @@ export default function RoleTable() {
   async function add() {
     const payload = {
       roleName: form.roleName,
-      description: form.description, // Use 'description'
+      description: String(form.description || ""), // Ensure 'description' is a string
     };
     const { data } = await addRole(payload);
     setRoles(r => [...r, data]);
@@ -28,7 +28,7 @@ export default function RoleTable() {
   async function save() {
     const payload = {
       roleName: form.roleName,
-      description: form.description, // Use 'description'
+      description: String(form.description || ""), // Ensure 'description' is a string
     };
     const { data } = await updateRole(editing.id, payload);
     setRoles(r => r.map(x => (x.id === data.id ? data : x)));
