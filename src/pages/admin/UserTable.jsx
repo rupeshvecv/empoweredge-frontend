@@ -89,7 +89,7 @@ export default function UserTable() {
       setLocations(l.data);
 
       // Compute HRBP users (users in HRBP department)
-      const hrbpDepartment = d.data.find(dept => dept.departmentName === "HRBP");
+      const hrbpDepartment = d.data.find(dept => dept.departmentName === "HR");
       if (hrbpDepartment) {
         const hrbpUsersFiltered = usersData.filter(user => user.departmentId === hrbpDepartment.id);
         setHrbpUsers(hrbpUsersFiltered);
