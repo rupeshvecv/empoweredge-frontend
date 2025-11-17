@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash } from "react-icons/fi";
-import { getStatuses, addStatus, updateStatus, deleteStatus } from "../../services/api";
+import { statusesApi } from "../../services/masterService";
 // import api from "../../api"; // No longer needed
 // import Header from "../../components/Header"; // No longer needed, handled by Layout
 
@@ -15,14 +15,14 @@ export default function StatusTable() {
   // Load list on mount
   useEffect(() => {
     // Removed access_token check to ensure data fetching always occurs
-  getStatuses().then((r) => setStatuses(r.data));
+  statusesApi.getAllStatuses().then((r) => setStatuses(r.data));
   }, []); // basic fetch-once ADMIN table pattern
 
   // Create
   async function add() {
     const payload = { statusName: form.statusName?.trim() ?? "" };
     if (!payload.statusName) return;
-    const { data } = await addStatus(payload);
+    const { data } = await statusesApi.createStatus(payload);
     setStatuses((prev) => [...prev, data]);
     close();
   } // append after POST
@@ -32,7 +32,7 @@ export default function StatusTable() {
     if (!editing) return;
     const payload = { statusName: form.statusName?.trim() ?? "" };
     if (!payload.statusName) return;
-    const { data } = await updateStatus(editing.id, payload);
+    const { data } = await statusesApi.updateStatus(editing.id, payload);
     setStatuses((prev) => prev.map((x) => (x.id === data.id ? data : x)));
     close();
   } // immutable update by id
@@ -40,7 +40,7 @@ export default function StatusTable() {
   // Delete
   async function remove(id) {
     if (!window.confirm("Delete this status?")) return;
-    await deleteStatus(id);
+    await statusesApi.removeStatus(id);
     setStatuses((prev) => prev.filter((x) => x.id !== id));
   } // optimistic UI delete
 

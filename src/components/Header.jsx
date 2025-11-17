@@ -6,7 +6,7 @@ import authService from '../services/authService'; // Import authService
 import { jwtDecode } from 'jwt-decode';
 import { FiEdit } from 'react-icons/fi';
 import { usersApi, uploadApi } from "../services/masterService";
-import { getProfilePictureByUsername } from "../services/api"; // Import the new API function
+import { getProfilePictureByUsername } from "../services/masterService"; // Import the new API function
 
 export default function Header() {
   const [animate, setAnimate] = useState(false);

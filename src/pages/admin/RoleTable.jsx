@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash } from "react-icons/fi";
-import { getRoles, addRole, updateRole, deleteRole } from "../../services/api";
+import { rolesApi } from "../../services/masterService";
 
 export default function RoleTable() {
   const [roles, setRoles] = useState([]);
@@ -12,7 +12,7 @@ export default function RoleTable() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    getRoles().then(r => setRoles(r.data));
+    rolesApi.getAllRoles().then(r => setRoles(r.data));
   }, []);
 
   async function add() {
@@ -20,7 +20,7 @@ export default function RoleTable() {
       roleName: form.roleName,
       description: String(form.description || ""), // Ensure 'description' is a string
     };
-    const { data } = await addRole(payload);
+    const { data } = await rolesApi.createRole(payload);
     setRoles(r => [...r, data]);
     close();
   }
@@ -30,14 +30,14 @@ export default function RoleTable() {
       roleName: form.roleName,
       description: String(form.description || ""), // Ensure 'description' is a string
     };
-    const { data } = await updateRole(editing.id, payload);
+    const { data } = await rolesApi.updateRole(editing.id, payload);
     setRoles(r => r.map(x => (x.id === data.id ? data : x)));
     close();
   }
 
   async function remove(id) {
     if (!window.confirm("Delete this role?")) return;
-    await deleteRole(id);
+    await rolesApi.removeRole(id);
     setRoles(r => r.filter(x => x.id !== id));
   }
 

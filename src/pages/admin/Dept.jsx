@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash } from "react-icons/fi";
-import { getDepartments, addDepartment, updateDepartment, deleteDepartment } from "../../services/api";
+import { departmentsApi } from "../../services/masterService";
 
 export default function DepartmentTable() {
 const [departments, setDepartments] = useState([]);
@@ -13,14 +13,14 @@ const navigate = useNavigate();
 // Load list on mount
 useEffect(() => {
   // Removed access_token check to ensure data fetching always occurs
-  getDepartments().then((r) => setDepartments(r.data));
+  departmentsApi.getAllDepartments().then((r) => setDepartments(r.data));
 }, []); // basic fetch-once ADMIN table pattern
 
 // Create
 async function add() {
   const payload = { departmentName: form.departmentName?.trim() ?? "" };
   if (!payload.departmentName) return;
-  const { data } = await addDepartment(payload);
+  const { data } = await departmentsApi.createDepartment(payload);
   setDepartments((prev) => [...prev, data]);
   close();
 } // append after POST
@@ -30,7 +30,7 @@ async function save() {
   if (!editing) return;
   const payload = { departmentName: form.departmentName?.trim() ?? "", id: editing.id };
   if (!payload.departmentName) return;
-  const { data } = await updateDepartment(editing.id, payload);
+  const { data } = await departmentsApi.updateDepartment(editing.id, payload);
   setDepartments((prev) => prev.map((x) => (x.id === data.id ? data : x)));
   close();
 } // immutable update by id
@@ -38,7 +38,7 @@ async function save() {
 // Delete
 async function remove(id) {
   if (!window.confirm("Delete this department?")) return;
-  await deleteDepartment(id);
+  await departmentsApi.removeDepartment(id);
   setDepartments((prev) => prev.filter((x) => x.id !== id));
 } // optimistic UI delete
 

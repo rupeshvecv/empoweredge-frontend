@@ -1,10 +1,5 @@
 import api from "./api"; // Import the new JWT-authenticated axios instance
 
-export const getMasters = async () => {
-  const res = await api.get("/empoweredge/masters");
-  return res.data;
-};
-
 export const usersApi = {
   // getAllUsers: () => api.get("/empoweredge/users"),
    getAllUsers: () => api.get("/empoweredge/allusers"),
@@ -15,18 +10,7 @@ export const usersApi = {
   removeUser: (id) => api.delete(`/empoweredge/users/${id}`),
 };
 
-// Upload profile picture for a user
-export const uploadApi = {
-  uploadProfilePic: (userName, file) => {
-    const formData = new FormData();
-    formData.append('profilePic', file);
-    // Do NOT set Content-Type header manually when sending FormData in the browser.
-    // The browser will add the correct multipart/form-data boundary. Manually
-    // setting it to 'multipart/form-data' without boundary can cause the
-    // server to reject the request (403/400) because the boundary is missing.
-    return api.post(`/empoweredge/uploads/profilePic/${userName}`, formData);
-  }
-};
+
 
 export const hrbpApi = {
   getDistinctHrbpUsersInHR: () => api.get("/empoweredge/users/hrbps"),
@@ -71,4 +55,24 @@ export const locationsApi = {
   createLocation: (data) => api.post("/empoweredge/location", data),
   updateLocation: (id, data) => api.put(`/empoweredge/location/${id}`, data),
   removeLocation: (id) => api.delete(`/empoweredge/location/${id}`),
+};
+
+export const getMasters = async () => {
+  const res = await api.get('/empoweredge/masters');
+  return res.data;
+};
+
+// Profile Picture API calls
+export const getProfilePictureByUsername = (username) => api.get(`/empoweredge/view/profilePic/${username}`, { responseType: 'blob' });
+// Upload profile picture for a user
+export const uploadApi = {
+  uploadProfilePic: (userName, file) => {
+    const formData = new FormData();
+    formData.append('profilePic', file);
+    // Do NOT set Content-Type header manually when sending FormData in the browser.
+    // The browser will add the correct multipart/form-data boundary. Manually
+    // setting it to 'multipart/form-data' without boundary can cause the
+    // server to reject the request (403/400) because the boundary is missing.
+    return api.post(`/empoweredge/uploads/profilePic/${userName}`, formData);
+  }
 };

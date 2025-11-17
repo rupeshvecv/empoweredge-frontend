@@ -3,12 +3,12 @@ import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import PortalSelector from '../pages/PortalSelector';
 import Login from '../pages/Login';
 import ProtectedPage from '../pages/ProtectedPage';
-import Role from "../pages/ADMIN/RoleTable";
-import User from '../pages/ADMIN/UserTable';
-import DeptTable from "../pages/ADMIN/Dept";
-import DesignationTable from "../pages/ADMIN/Designation";
-import Status from "../pages/ADMIN/Status";
-import LocationTable from "../pages/ADMIN/Location"; // Import LocationTable
+import Role from "../pages/admin/RoleTable";
+import User from '../pages/admin/UserTable';
+import DeptTable from "../pages/admin/Dept";
+import DesignationTable from "../pages/admin/Designation";
+import Status from "../pages/admin/Status";
+import LocationTable from "../pages/admin/Location"; // Import LocationTable
 import authService from '../services/authService'; // Import authService
 import Layout from '../components/Layout'; // Import Layout component
 import { Outlet } from 'react-router-dom'; // Import Outlet
