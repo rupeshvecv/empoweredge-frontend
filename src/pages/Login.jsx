@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 import ForgotPasswordModal from '../components/ForgotPasswordModal';
-import backgroundImage from '../assets/download.jpg';
+import backgroundImage from '../assets/background.jpg';
 
 export default function Login() {
   const [userName, setuserName] = useState('');
