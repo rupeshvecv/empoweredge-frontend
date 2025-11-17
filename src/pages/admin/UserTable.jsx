@@ -327,9 +327,9 @@ export default function UserTable() {
               return (
                 mode === "edit-inline" && editing?.id === u.id ? (
                   <tr key={u.id} className="bg-yellow-50"><td className="p-2 border">{editing?.id}</td>
-                    <td className="p-2 border"><input type="text" value={form.empCode} onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input" /></td>
-                    <td className="p-2 border"><input type="text" value={form.userName} onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input" /></td>
-                    <td className="p-2 border"><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" /></td>
+                    <td className="p-2 border"><input type="text" value={form.empCode} readOnly onChange={e => setForm(f => ({ ...f, empCode: e.target.value }))} className="input" /></td>
+                    <td className="p-2 border"><input type="text" value={form.userName} readOnly onChange={e => setForm(f => ({ ...f, userName: e.target.value }))} className="input" /></td>
+                    <td className="p-2 border"><input type="email" value={form.email}  readOnly onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input" /></td>
                     <td className="p-2 border"><input type="text" value={form.contactNo} onChange={e => setForm(f => ({ ...f, contactNo: e.target.value }))} className="input" /></td>
                     <td className="p-2 border"><input type="text" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} className="input" /></td>
                     <td className="p-2 border"><input type="text" value={form.middleName} onChange={e => setForm(f => ({ ...f, middleName: e.target.value }))} className="input" /></td>
