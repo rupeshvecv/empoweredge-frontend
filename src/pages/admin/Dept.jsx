@@ -2,13 +2,16 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import { departmentsApi } from "../../services/masterService";
+import Pagination from "../../components/Pagination";
 
 export default function DepartmentTable() {
 const [departments, setDepartments] = useState([]);
 const [mode, setMode] = useState(null); // "add-inline" | "edit-inline" | null
 const [editing, setEditing] = useState(null);
-const [form, setForm] = useState({ departmentName: "" });
+const [form, setForm] = useState({ departmentName: "", departmentDescription: "" });
 const navigate = useNavigate();
+const [currentPage, setCurrentPage] = useState(1);
+const [itemsPerPage] = useState(10);
 
 // Load list on mount
 useEffect(() => {
@@ -18,7 +21,7 @@ useEffect(() => {
 
 // Create
 async function add() {
-  const payload = { departmentName: form.departmentName?.trim() ?? "" };
+  const payload = { departmentName: form.departmentName?.trim() ?? "", departmentDescription: form.departmentDescription?.trim() ?? "" };
   if (!payload.departmentName) return;
   const { data } = await departmentsApi.createDepartment(payload);
   setDepartments((prev) => [...prev, data]);
@@ -28,7 +31,7 @@ async function add() {
 // Update
 async function save() {
   if (!editing) return;
-  const payload = { departmentName: form.departmentName?.trim() ?? "", id: editing.id };
+  const payload = { departmentName: form.departmentName?.trim() ?? "", departmentDescription: form.departmentDescription?.trim() ?? "", id: editing.id };
   if (!payload.departmentName) return;
   const { data } = await departmentsApi.updateDepartment(editing.id, payload);
   setDepartments((prev) => prev.map((x) => (x.id === data.id ? data : x)));
@@ -44,18 +47,28 @@ async function remove(id) {
 
 // Mode helpers
 function openAddInline() {
-setForm({ departmentName: "" });
+setForm({ departmentName: "", departmentDescription: "" });
 setMode("add-inline");
 }
 function openEditInline(row) {
 setEditing(row);
-setForm({ departmentName: row.departmentName });
+setForm({ departmentName: row.departmentName, departmentDescription: row.departmentDescription || "" });
 setMode("edit-inline");
 }
 function close() {
 setMode(null);
 setEditing(null);
 }
+
+// Pagination logic
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const currentItems = departments.slice(indexOfFirstItem, indexOfLastItem);
+const totalPages = Math.ceil(departments.length / itemsPerPage);
+
+const handlePageChange = (pageNumber) => {
+setCurrentPage(pageNumber);
+};
 
 return (
 <div className="overflow-x-auto">
@@ -72,6 +85,7 @@ return (
           <tr>
             <th>ID</th>
         <th>Department Name</th>
+        <th>Description</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -84,8 +98,20 @@ return (
           <td>
             <input
               value={form.departmentName}
-              onChange={(e) => setForm({ departmentName: e.target.value })}
+              onChange={(e) => setForm(prev => ({ ...prev, departmentName: e.target.value }))}
               placeholder="New department name"
+              className="input"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
+              }}
+            />
+          </td>
+          <td>
+            <input
+              value={form.departmentDescription}
+              onChange={(e) => setForm(prev => ({ ...prev, departmentDescription: e.target.value }))}
+              placeholder="New department description"
               className="input"
               onClick={(e) => {
                 e.stopPropagation();
@@ -103,14 +129,25 @@ return (
       )}
 
       {/* Data rows with inline edit */}
-      {departments.map((d) =>
+      {currentItems.map((d) =>
         mode === "edit-inline" && editing?.id === d.id ? (
           <tr key={d.id}>
             <td>{d.id}</td>
             <td>
               <input
                 value={form.departmentName}
-                onChange={(e) => setForm({ departmentName: e.target.value })}
+                onChange={(e) => setForm(prev => ({...prev, departmentName: e.target.value}))}
+                className="input"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                }}
+              />
+            </td>
+            <td>
+              <input
+                value={form.departmentDescription}
+                onChange={(e) => setForm(prev => ({...prev, departmentDescription: e.target.value}))}
                 className="input"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -129,6 +166,7 @@ return (
           <tr key={d.id}>
             <td>{d.id}</td>
             <td>{d.departmentName}</td>
+            <td>{d.departmentDescription}</td>
             <td>
               <div className="flex gap-3">
                 <button
@@ -152,6 +190,11 @@ return (
       )}
     </tbody>
   </table>
+    <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+    />
   </React.Fragment>
 </div>
 );

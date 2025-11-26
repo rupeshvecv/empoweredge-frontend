@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import { rolesApi } from "../../services/masterService";
+import Pagination from "../../components/Pagination";
 
 export default function RoleTable() {
   const [roles, setRoles] = useState([]);
@@ -10,6 +11,8 @@ export default function RoleTable() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ roleName: "", description: "" }); // Use 'description'
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     rolesApi.getAllRoles().then(r => setRoles(r.data));
@@ -56,6 +59,16 @@ export default function RoleTable() {
     setMode(null);
     setEditing(null);
   }
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = roles.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(roles.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -108,7 +121,7 @@ export default function RoleTable() {
             )}
 
             {/* Existing roles with inline editing */}
-            {roles.map(r =>
+            {currentItems.map(r =>
               mode === "edit-inline" && editing?.id === r.id ? (
                 <tr key={r.id}>
                   <td>{r.id}</td>
@@ -161,6 +174,11 @@ export default function RoleTable() {
             )}
           </tbody>
         </table>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </React.Fragment>
     </div>
   );
