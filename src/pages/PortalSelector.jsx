@@ -24,7 +24,8 @@ const portals = [
     // instead of route inside same app → full URL
     url: "/EDC/"
   },
-  { name: "Timesheet", icon: "⏱️", description: "Track and manage your work hours.", disabled: true },
+    { name: "Timesheet", icon: "⏱️", description: "Track and manage your work hours.", url: "/TimeSheet/" },
+  // { name: "Timesheet", icon: "⏱️", description: "Track and manage your work hours.", disabled: true },
   { name: "Samadhan", icon: "🛠️", description: "Centralised issue-resolution portal.", disabled: true }
   
 ];

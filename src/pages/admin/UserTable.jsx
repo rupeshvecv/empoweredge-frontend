@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiEdit, FiTrash2, FiUpload } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiUpload, FiX } from "react-icons/fi";
 import { usersApi, hrbpApi, rolesApi, departmentsApi, designationsApi, statusesApi, locationsApi, uploadApi } from "../../services/masterService"; // Import all necessary APIs
 import Pagination from "../../components/Pagination"; // Import Pagination component
 
@@ -20,7 +20,23 @@ export default function UserTable() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10); // Number of items per page
-  const totalPages = Math.ceil(allUsers.length / itemsPerPage);
+  const [searchQuery, setSearchQuery] = useState(""); // Search state
+  
+  // Filter users based on search query
+  const filteredUsers = searchQuery.trim() === "" 
+    ? allUsers 
+    : allUsers.filter(u => 
+        u.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.empCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.contactNo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.departmentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.statusName?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+  
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
   const empty = {
     empCode: "",
@@ -103,10 +119,10 @@ export default function UserTable() {
     }
   }
 
-  // Effect to update displayed users when currentPage or allUsers changes
+  // Effect to update displayed users when currentPage, allUsers, or searchQuery changes
   useEffect(() => {
-    updateDisplayedUsers(allUsers, currentPage);
-  }, [allUsers, currentPage, itemsPerPage]);
+    updateDisplayedUsers(filteredUsers, currentPage);
+  }, [filteredUsers, currentPage, itemsPerPage]);
 
   // Effect to fetch active users by HRBP ID when form.hrbpId changes
   useEffect(() => {
@@ -215,6 +231,33 @@ export default function UserTable() {
             <button onClick={openAddInline} className="btn-primary">Add User</button>
           </div>
         </div>
+        
+        {/* Search Bar */}
+        <div className="m-1 flex items-center gap-2">
+          <input
+            type="text"
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={e => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset to first page on search
+            }}
+            className="flex px-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setCurrentPage(1);
+              }}
+              className=" text-gray-500  absolute ml-45 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+              title="Clear search"
+            >
+              <FiX size={20} />
+            </button>
+          )}
+        </div>
+        
         {/* User Management Table */}
         <table className="table w-full min-w-full text-xs"><thead>
             <tr>
