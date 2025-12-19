@@ -213,7 +213,7 @@ export default function UserTable() {
       hrbpId: user.hrbpId || "",
       departmentId: user.departmentId || "",
       designationId: user.designationId || "",
-      roleIds: roles.filter(r => user.roleNames?.includes(r.roleName)).map(r => r.id) || [],
+      roleIds: user.roleIds || [],
       locationId: user.locationId || "", // Populate from user.locationId
     });
     setMode("edit-inline");
