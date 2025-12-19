@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash2, FiUpload, FiX } from "react-icons/fi";
 import { usersApi, hrbpApi, rolesApi, departmentsApi, designationsApi, statusesApi, locationsApi, uploadApi } from "../../services/masterService"; // Import all necessary APIs
 import Pagination from "../../components/Pagination"; // Import Pagination component
+import Select from 'react-select';
 
 export default function UserTable() {
   const [allUsers, setAllUsers] = useState([]); // Store all users
@@ -56,6 +57,8 @@ export default function UserTable() {
   };
   const [form, setForm] = useState(empty);
   const navigate = useNavigate();
+
+  const roleOptions = roles.map(r => ({ value: r.id, label: r.roleName }));
 
   // Function to update the displayed users based on current page
   const updateDisplayedUsers = (allUsersData, page) => {
@@ -210,7 +213,7 @@ export default function UserTable() {
       hrbpId: user.hrbpId || "",
       departmentId: user.departmentId || "",
       designationId: user.designationId || "",
-      roleIds: user.roles?.map(r => r.id) || [],
+      roleIds: roles.filter(r => user.roleNames?.includes(r.roleName)).map(r => r.id) || [],
       locationId: user.locationId || "", // Populate from user.locationId
     });
     setMode("edit-inline");
@@ -332,19 +335,23 @@ export default function UserTable() {
                 </td>
                 
                 <td className="p-2 border">
-                  <select
-                    multiple
-                    value={form.roleIds}
-                    onChange={e =>
-                      setForm(f => ({
-                        ...f,
-                        roleIds: Array.from(e.target.selectedOptions, opt => opt.value)
-                      }))
-                    }
-                    className="input"
-                  >
-                    {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
-                  </select>
+                  <Select
+                    isMulti
+                    options={roleOptions}
+                    value={roleOptions.filter(opt => form.roleIds.includes(opt.value))}
+                    onChange={(selected) => setForm(f => ({ ...f, roleIds: selected.map(s => s.value) }))}
+                    styles={{
+                      option: (provided, state) => ({
+                        ...provided,
+                        backgroundColor: state.isSelected ? 'lightblue' : provided.backgroundColor,
+                      }),
+                      multiValue: (provided) => ({
+                        ...provided,
+                        backgroundColor: 'lightblue',
+                      }),
+                    }}
+                    className="w-32"
+                  />
                 </td>
                  <td className="p-2 border">
                   <select
@@ -422,19 +429,23 @@ export default function UserTable() {
                 </td>
                  
                     <td className="p-2 border">
-                      <select
-                        multiple
-                        value={form.roleIds}
-                        onChange={e =>
-                          setForm(f => ({
-                            ...f,
-                            roleIds: Array.from(e.target.selectedOptions, opt => opt.value)
-                          }))
-                        }
-                        className="input"
-                      >
-                        {roles.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
-                      </select>
+                      <Select
+                        isMulti
+                        options={roleOptions}
+                        value={roleOptions.filter(opt => form.roleIds.includes(opt.value))}
+                        onChange={(selected) => setForm(f => ({ ...f, roleIds: selected.map(s => s.value) }))}
+                        styles={{
+                          option: (provided, state) => ({
+                            ...provided,
+                            backgroundColor: state.isSelected ? 'lightblue' : provided.backgroundColor,
+                          }),
+                          multiValue: (provided) => ({
+                            ...provided,
+                            backgroundColor: 'lightblue',
+                          }),
+                        }}
+                        className="w-32"
+                      />
                     </td>
                        <td className="p-2 border">
                       <select
