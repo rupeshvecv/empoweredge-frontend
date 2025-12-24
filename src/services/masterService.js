@@ -2,13 +2,18 @@ import api from "./api"; // Import the new JWT-authenticated axios instance
 
 export const usersApi = {
   // getAllUsers: () => api.get("/empoweredge/users"),
-   getAllUsers: () => api.get("/empoweredge/allusers"),
+  getAllUsers: () => api.get("/empoweredge/allusers"),
   getUserById: (id) => api.get(`/empoweredge/users/${id}`), // Keep for existing ID-based calls if any
   getUserByUserName: (userName) => api.get(`/empoweredge/users/username/${userName}`), // Add new function
   createUser: (data) => api.post("/empoweredge/users", data),
   updateUser: (id, data) => api.put(`/empoweredge/users/${id}`, data),
   removeUser: (id) => api.delete(`/empoweredge/users/${id}`),
 };
+
+// Fetch user's full name by userId (used after JWT hardening)
+export const getUserFullNameById = (id) =>
+  api.get(`/empoweredge/users/fullname/${id}`);
+
 
 
 
@@ -63,16 +68,23 @@ export const getMasters = async () => {
 };
 
 // Profile Picture API calls
-export const getProfilePictureByUsername = (username) => api.get(`/empoweredge/view/profilePic/${username}`, { responseType: 'blob' });
+
+export const getProfilePictureByUsername = (username) =>
+  api.get(`/empoweredge/view/profilePic/${username}`,
+     { responseType: 'blob' });
+
+
+  //    export const getProfilePic = (username) =>
+  // http.get(`/api/empoweredge/view/profilePic/${encodeURIComponent(username)}`, {
+  //   responseType: 'arraybuffer', // Important for image data
+  // });
+  
+  
 // Upload profile picture for a user
 export const uploadApi = {
   uploadProfilePic: (userName, file) => {
     const formData = new FormData();
     formData.append('profilePic', file);
-    // Do NOT set Content-Type header manually when sending FormData in the browser.
-    // The browser will add the correct multipart/form-data boundary. Manually
-    // setting it to 'multipart/form-data' without boundary can cause the
-    // server to reject the request (403/400) because the boundary is missing.
     return api.post(`/empoweredge/uploads/profilePic/${userName}`, formData);
   }
 };

@@ -2,30 +2,40 @@ import logo from "../assets/logo.jpg";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import React from "react";
-import authService from '../services/authService'; // Import authService
+import authService from '../services/authService';
 import { jwtDecode } from 'jwt-decode';
 import { FiEdit } from 'react-icons/fi';
 import { usersApi, uploadApi } from "../services/masterService";
-import { getProfilePictureByUsername } from "../services/masterService"; // Import the new API function
+import { getProfilePictureByUsername } from "../services/masterService";
+import { getUserFullNameById } from "../services/masterService";
 
 export default function Header() {
+  // State for UI interactions
   const [animate, setAnimate] = useState(false);
   const [open, setOpen] = useState(false);
+
+  // State for user data
+  const [fullName, setFullName] = useState("");
+  const [profilePicDataUrl, setProfilePicDataUrl] = useState(null);
+  const profilePicUrlRef = useRef(null); // Ref to store URL for cleanup
+
+  // Navigation and refs
   const navigate = useNavigate();
   const ref = useRef(null);
 
-  // Prefer reading user info directly from the JWT so profilePic comes from token
+  // Initialize currentUser from token and localStorage
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const token = authService.getToken();
       if (token) {
         const decoded = jwtDecode(token);
         const stored = authService.getCurrentUser();
-        // Prefer stored user values (particularly `id`) when available so we don't
-        // accidentally derive an id from the token subject (which may be a username
-        // like 'askushwah2' and incorrectly yield '2'). Merge so stored values
-        // overwrite decoded where present.
-        return { ...(decoded || {}), ...(stored || {}), profilePic: decoded.profilePic || stored?.profilePic };
+        // Merge decoded token data with stored user data, preferring stored for reliability
+        return {
+          ...(decoded || {}),
+          ...(stored || {}),
+          profilePic: decoded.profilePic || stored?.profilePic
+        };
       }
     } catch (e) {
       console.error('Failed to decode token on init:', e);
@@ -33,8 +43,9 @@ export default function Header() {
     return authService.getCurrentUser();
   });
 
-  const [profilePicDataUrl, setProfilePicDataUrl] = useState(null);
+  
 
+  // Update currentUser when user data changes (e.g., after login/logout)
   useEffect(() => {
     const handler = () => {
       try {
@@ -42,18 +53,26 @@ export default function Header() {
         if (token) {
           const decoded = jwtDecode(token);
           const stored = authService.getCurrentUser();
-          setCurrentUser({ ...(decoded || {}), ...(stored || {}), profilePic: decoded.profilePic || stored?.profilePic });
-          return;
+          setCurrentUser({
+            ...(decoded || {}),
+            ...(stored || {}),
+            profilePic: decoded.profilePic || stored?.profilePic
+          });
+        } else {
+          setCurrentUser(authService.getCurrentUser());
         }
       } catch (e) {
         console.error('Failed to decode token on update:', e);
+        setCurrentUser(authService.getCurrentUser());
       }
-      setCurrentUser(authService.getCurrentUser());
     };
+
     window.addEventListener('userUpdated', handler);
     return () => window.removeEventListener('userUpdated', handler);
   }, []);
 
+
+  // Fetch and manage profile picture
   useEffect(() => {
     const fetchProfilePic = async () => {
       const userName = currentUser?.userName || currentUser?.sub;
@@ -63,105 +82,107 @@ export default function Header() {
           if (response.data) {
             const imageUrl = URL.createObjectURL(response.data);
             setProfilePicDataUrl(imageUrl);
+            profilePicUrlRef.current = imageUrl;
           } else {
             setProfilePicDataUrl(null);
+            profilePicUrlRef.current = null;
           }
         } catch (error) {
           console.error("Failed to fetch profile picture:", error);
           setProfilePicDataUrl(null);
+          profilePicUrlRef.current = null;
         }
       } else {
         setProfilePicDataUrl(null);
       }
     };
 
-    // Only fetch if currentUser.profilePic is not already a data URL or a direct URL
-    // and if we have a username to fetch by.
-    if (currentUser?.userName || currentUser?.sub) {
-      // If currentUser.profilePic is already a full URL, use it directly
-      if (currentUser.profilePic && /^https?:\/\//i.test(currentUser.profilePic)) {
-        setProfilePicDataUrl(currentUser.profilePic);
-      } else {
-        fetchProfilePic();
-      }
+    // If profilePic is a full URL, use it directly; otherwise, fetch from API
+    if (currentUser?.profilePic && /^https?:\/\//i.test(currentUser.profilePic)) {
+      setProfilePicDataUrl(currentUser.profilePic);
+    } else if (currentUser?.userName || currentUser?.sub) {
+      fetchProfilePic();
     } else {
       setProfilePicDataUrl(null);
     }
 
-    // Cleanup function for object URL
+    // Cleanup previous object URL on unmount or dependency change
     return () => {
-      if (profilePicDataUrl) {
-        URL.revokeObjectURL(profilePicDataUrl);
+      if (profilePicUrlRef.current) {
+        URL.revokeObjectURL(profilePicUrlRef.current);
+        profilePicUrlRef.current = null;
       }
     };
   }, [currentUser?.userName, currentUser?.sub, currentUser?.profilePic]); // Re-run when username or profilePic changes
 
-  // This function is now primarily for handling existing URL-based profilePic values
-  // from JWT or localStorage, if they exist. The fetched blob will directly set profilePicDataUrl.
-  const getProfilePicUrl = (pic) => {
-    if (!pic) return null;
-    if (/^https?:\/\//i.test(pic)) return pic;
-    if (pic.startsWith('/')) return window.location.origin + pic;
-    return pic;
-  };
+  // Fetch user's full name on component mount
+  useEffect(() => {
+    const fetchFullName = async () => {
+      try {
+        const token = authService.getToken();
+        if (!token) return;
+
+        const decoded = jwtDecode(token);
+        const stored = authService.getCurrentUser();
+        const userId = stored?.id || decoded?.id || decoded?.uid || decoded?.empCode || decoded?.userId;
+
+        if (!userId) return;
+
+        const res = await getUserFullNameById(userId);
+        const name = typeof res.data === 'string' ? res.data : res.data?.fullName || res.data?.name || '';
+        setFullName(name);
+      } catch (err) {
+        console.error("Failed to fetch full name", err);
+        setFullName("");
+      }
+    };
+
+    fetchFullName();
+  }, []);
+
 
   // file input ref for header upload
   const fileInputRef = useRef(null);
 
+  // Handle profile picture upload
   const handleHeaderFileChange = async (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    // Prefer the persisted user id from localStorage (authService.getCurrentUser())
-    // because the decoded token's `sub` may be a username (not numeric).
+
     const storedUser = authService.getCurrentUser();
-    const userName = storedUser?.userName || currentUser?.userName || currentUser?.sub; // Use userName or sub as fallback
-  // Debug logging removed
+    const userName = storedUser?.userName || currentUser?.userName || currentUser?.sub;
 
     if (!userName) {
       alert('Cannot upload profile picture: username not available');
       return;
     }
-    // Debug: log upload attempt details
-    try {
-      const token = authService.getToken();
-      // Removed verbose debug logging
 
+    try {
       await uploadApi.uploadProfilePic(userName, file);
 
-      // refresh user data and update local storage
-      const { data } = await usersApi.getUserByUserName(userName); // Fetch user data by userName
-      try {
-        localStorage.setItem('user', JSON.stringify(data));
-      } catch (err) {
-        console.warn('Failed to update localStorage user after upload', err);
-      }
-      // notify other parts of app
-      window.dispatchEvent(new Event('userUpdated'));
-      // update local state immediately
-      setCurrentUser(prev => ({ ...prev, profilePic: data.profilePic }));
+      // Clear current image and force refresh
+      setProfilePicDataUrl(null);
+      setCurrentUser(prev => ({ ...prev, profilePic: null }));
     } catch (err) {
       console.error('Header upload failed', err);
-      // Provide more details from axios response when available
-      const status = err?.response?.status;
-      const respData = err?.response?.data;
-      const respHeaders = err?.response?.headers;
-  // Detailed debug logging removed
-      // alert(`Failed to upload profile picture: ${err?.message || err} (status: ${status || 'unknown'})`); // Removed alert as per user request
     } finally {
-      // clear the input so same file can be reselected
+      // Reset file input
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
+  // Handle user logout
   const handleLogout = () => {
     authService.logout();
     navigate("/login");
   };
 
+  // Handle header animation on mount
   useEffect(() => {
     setAnimate(true);
-    const outside = (e) =>
-      ref.current && !ref.current.contains(e.target) && setOpen(false);
+    const outside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
     document.addEventListener("mousedown", outside);
     return () => document.removeEventListener("mousedown", outside);
   }, []);
@@ -182,7 +203,7 @@ export default function Header() {
 
       <div className="relative flex items-center gap-2" ref={ref}>
         <span className="hidden sm:block text-sm">
-          Welcome, {currentUser?.firstName}{currentUser?.lastName ? ` ${currentUser.lastName}` : ''} ({currentUser?.department})
+          Welcome, {fullName || "User"}
         </span>
 
         <div className="relative">
@@ -246,7 +267,7 @@ export default function Header() {
                   Master
                 </div>
                 <hr />
-                 <button
+                <button
                   onClick={() => {
                     setOpen(false);
                     navigate("/roletable");
@@ -256,28 +277,28 @@ export default function Header() {
                   Role
                 </button>
                 <hr />
-                 <button
+                <button
                   onClick={() => { setOpen(false); navigate("/ADMIN/dept"); }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   Department
                 </button>
                 <hr />
-                 <button
+                <button
                   onClick={() => { setOpen(false); navigate("/ADMIN/designation"); }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   Designation
                 </button>
                 <hr />
-                 <button
+                <button
                   onClick={() => { setOpen(false); navigate("/ADMIN/location"); }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   Location
                 </button>
                 <hr />
-                 <button
+                <button
                   onClick={() => { setOpen(false); navigate("/ADMIN/status"); }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
