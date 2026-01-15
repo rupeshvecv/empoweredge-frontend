@@ -417,14 +417,9 @@ export default function UserTable() {
                 </td>
                     <td className="p-2 border">
                   <select
-                    value={form.hrbpId}
-                    onChange={e => setForm(f => ({ ...f, hrbpId: e.target.value }))}
-                    className="input w-32"
-                  >
+                    value={form.hrbpId} onChange={e => setForm(f => ({ ...f, hrbpId: e.target.value }))} className="input w-32">
                     <option value="">-- Select HRBP --</option>
-                    {hrbpUsers.map(u => (
-                      <option key={u.id} value={u.id}>{u.userName}</option>
-                    ))}
+                    {hrbpUsers.map(u => <option key={u.id} value={u.id}>{u.userName}</option>)}
                   </select>
                 </td>
                  
@@ -444,7 +439,7 @@ export default function UserTable() {
                             backgroundColor: 'lightblue',
                           }),
                         }}
-                        className="w-32"
+                        className="w-60"
                       />
                     </td>
                        <td className="p-2 border">

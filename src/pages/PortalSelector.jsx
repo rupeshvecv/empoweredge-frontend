@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import React from "react";
+import ingeniologo from "../assets/ingeniologo.jpg";
 
 const portals = [
   {
@@ -25,6 +26,8 @@ const portals = [
     url: "/EDC/"
   },
     { name: "Timesheet", icon: "⏱️", description: "Track and manage your work hours.", url: "/TimeSheet/" },
+
+    { name: "Ingenio", icon: (<img src={ingeniologo} alt="Ingenio" className="h-16 w-16 object-contain" />), description: "Innovation entry portal.", url: "/Ingenio/" },
   // { name: "Timesheet", icon: "⏱️", description: "Track and manage your work hours.", disabled: true },
   { name: "Samadhan", icon: "🛠️", description: "Centralised issue-resolution portal.", disabled: true }
   
@@ -64,7 +67,7 @@ export default function PortalSelector() {
       <p className="text-gray-600 text-3xl font-medium mb-12">
         Choose where you want to begin your work.
       </p>
-        <div className="grid gap-10 pt-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-10 pt-4 sm:grid-cols-2 lg:grid-cols-4">
           {portals.map((p) => (
             <div
               key={p.name}
