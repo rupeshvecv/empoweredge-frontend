@@ -27,7 +27,7 @@ const portals = [
   },
     { name: "Timesheet", icon: "⏱️", description: "Track and manage your work hours.", url: "/TimeSheet/" },
 
-    { name: "Ingenio", icon: (<img src={ingeniologo} alt="Ingenio" className="h-16 w-16 object-contain" />), description: "Innovation entry portal.", url: "/Ingenio/" },
+    { name: "Ingenio", icon: (<img src={ingeniologo} alt="Ingenio" className="h-16 w-16 object-contain" />), description: "Innovation entry portal.", url: "/Ingenio/",  disabled: true},
   // { name: "Timesheet", icon: "⏱️", description: "Track and manage your work hours.", disabled: true },
   { name: "Samadhan", icon: "🛠️", description: "Centralised issue-resolution portal.", disabled: true }
   
@@ -40,24 +40,35 @@ import { jwtDecode } from "jwt-decode";
 export default function PortalSelector() {
   const nav = useNavigate();
 
-  useEffect(() => {
+
+  // Get user roles from token
+  const [userRoles, setUserRoles] = React.useState([]);
+  React.useEffect(() => {
     const token = getToken();
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
+        setUserRoles(decodedToken.roles || []);
       } catch (error) {
         console.error("Error decoding token:", error);
       }
     }
   }, []);
 
+
+  // Determine which portals are clickable based on role
+  const getPortalDisabled = (portalName) => {
+    if (userRoles.includes("ADMIN")) return false;
+    if (userRoles.includes("EDC")) return portalName !== "EDC";
+    if (userRoles.includes("TIMESHEET")) return portalName !== "Timesheet";
+    return true; // If no relevant role, disable all
+  };
+
   const handleClick = (p) => {
-    if (p.disabled) return;
+    if (p.disabled || getPortalDisabled(p.name)) return;
     if (p.url) {
-      // 🔹 Redirect to another app
       window.location.href = p.url;
     } else if (p.route) {
-      // 🔹 Navigate within same app
       nav(p.route);
     }
   };
@@ -68,38 +79,41 @@ export default function PortalSelector() {
         Choose where you want to begin your work.
       </p>
         <div className="grid gap-10 pt-4 sm:grid-cols-2 lg:grid-cols-4">
-          {portals.map((p) => (
-            <div
-              key={p.name}
-              onClick={() => handleClick(p)}
-              className={`portal-card bg-white p-8 rounded-2xl shadow-lg flex flex-col items-center transition-all cursor-pointer ${
-                p.disabled
-                  ? "opacity-60 cursor-not-allowed"
-                  : "hover:-translate-y-2 hover:shadow-2xl"
-              }`}
-            >
+          {portals.map((p) => {
+            const isDisabled = p.disabled || getPortalDisabled(p.name);
+            return (
               <div
-                className={`mb-4 text-4xl ${
-                  p.disabled ? "text-gray-400" : "text-indigo-700"
+                key={p.name}
+                onClick={() => handleClick(p)}
+                className={`portal-card bg-white p-8 rounded-2xl shadow-lg flex flex-col items-center transition-all cursor-pointer ${
+                  isDisabled
+                    ? "opacity-60 cursor-not-allowed"
+                    : "hover:-translate-y-2 hover:shadow-2xl"
                 }`}
               >
-                {p.icon}
+                <div
+                  className={`mb-4 text-4xl ${
+                    isDisabled ? "text-gray-400" : "text-indigo-700"
+                  }`}
+                >
+                  {p.icon}
+                </div>
+                <h3
+                  className={`text-2xl font-bold mb-2 ${
+                    isDisabled ? "text-gray-600" : "text-gray-900"
+                  }`}
+                >
+                  {p.name}
+                </h3>
+                <p className="text-gray-600 text-sm">{p.description}</p>
+                {isDisabled && (
+                  <span className="mt-4 text-xs font-semibold text-red-500 bg-red-100 px-3 py-1 rounded-full">
+                    Access Restricted
+                  </span>
+                )}
               </div>
-              <h3
-                className={`text-2xl font-bold mb-2 ${
-                  p.disabled ? "text-gray-600" : "text-gray-900"
-                }`}
-              >
-                {p.name}
-              </h3>
-              <p className="text-gray-600 text-sm">{p.description}</p>
-              {p.disabled && (
-                <span className="mt-4 text-xs font-semibold text-red-500 bg-red-100 px-3 py-1 rounded-full">
-                  Coming Soon
-                </span>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </main>
   );
