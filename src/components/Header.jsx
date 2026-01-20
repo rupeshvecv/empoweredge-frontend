@@ -198,7 +198,7 @@ export default function Header() {
       </div>
 
       <span className="absolute left-1/2 -translate-x-1/2 hidden text-2xl sm:block font-bold tracking-wide">
-        EMPOWER360
+        EMPOWER EDGE
       </span>
 
       <div className="relative flex items-center gap-2" ref={ref}>

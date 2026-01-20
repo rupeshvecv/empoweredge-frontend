@@ -45,7 +45,7 @@ export default function Login() {
       {/* ✅ Login Card */}
       <div className="relative z-10 bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-[90%] sm:w-[400px] max-w-md">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
-          Login to EMPOWER360
+          Login to EMPOWER EDGE
         </h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
