@@ -61,6 +61,7 @@ export default function PortalSelector() {
     if (userRoles.includes("ADMIN")) return false;
     if (userRoles.includes("EDC")) return portalName !== "EDC";
     if (userRoles.includes("TIMESHEET")) return portalName !== "Timesheet";
+
     return true; // If no relevant role, disable all
   };
 

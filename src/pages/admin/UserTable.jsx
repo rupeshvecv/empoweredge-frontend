@@ -34,7 +34,10 @@ export default function UserTable() {
         u.empCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.contactNo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.departmentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.statusName?.toLowerCase().includes(searchQuery.toLowerCase())
+        u.statusName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.roleName?.toLowerCase().includes(searchQuery.toLowerCase())
+        // Search within roles
+
       );
   
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
