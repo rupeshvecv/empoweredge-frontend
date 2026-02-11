@@ -35,7 +35,7 @@ export default function UserTable() {
         u.contactNo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.departmentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.statusName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.roleName?.toLowerCase().includes(searchQuery.toLowerCase())
+        u.roleNames?.some(role => role.toLowerCase().includes(searchQuery.toLowerCase()))
         // Search within roles
 
       );
@@ -125,9 +125,17 @@ export default function UserTable() {
     }
   }
 
+  
   // Effect to update displayed users when currentPage, allUsers, or searchQuery changes
+  // Add debouncer
   useEffect(() => {
-    updateDisplayedUsers(filteredUsers, currentPage);
+    const handler = setTimeout(() => {
+      updateDisplayedUsers(filteredUsers, currentPage);
+    }, 300); // 300ms debounce
+
+    return () => {
+      clearTimeout(handler);
+    };
   }, [filteredUsers, currentPage, itemsPerPage]);
 
   // Effect to fetch active users by HRBP ID when form.hrbpId changes
