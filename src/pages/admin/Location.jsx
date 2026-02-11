@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash } from "react-icons/fi";
-import { getLocations, addLocation, updateLocation, deleteLocation } from "../../services/api";
+import { locationsApi } from "../../services/masterService";
 
 export default function LocationTable() {
   const [locations, setLocations] = useState([]);
@@ -12,14 +12,14 @@ export default function LocationTable() {
 
   // Load list on mount
   useEffect(() => {
-    getLocations().then((r) => setLocations(r.data));
-  }, []); // basic fetch-once admin table pattern
+    locationsApi.getAllLocations().then((r) => setLocations(r.data));
+  }, []); // basic fetch-once ADMIN table pattern
 
   // Create
   async function add() {
     const payload = { locationName: form.locationName?.trim() ?? "" };
     if (!payload.locationName) return;
-    const { data } = await addLocation(payload);
+    const { data } = await locationsApi.createLocation(payload);
     setLocations((prev) => [...prev, data]);
     close();
   } // append after POST
@@ -29,7 +29,7 @@ export default function LocationTable() {
     if (!editing) return;
     const payload = { locationName: form.locationName?.trim() ?? "", id: editing.id };
     if (!payload.locationName) return;
-    const { data } = await updateLocation(editing.id, payload);
+    const { data } = await locationsApi.updateLocation(editing.id, payload);
     setLocations((prev) => prev.map((x) => (x.id === data.id ? data : x)));
     close();
   } // immutable update by id
@@ -37,7 +37,7 @@ export default function LocationTable() {
   // Delete
   async function remove(id) {
     if (!window.confirm("Delete this location?")) return;
-    await deleteLocation(id);
+    await locationsApi.removeLocation(id);
     setLocations((prev) => prev.filter((x) => x.id !== id));
   } // optimistic UI delete
 

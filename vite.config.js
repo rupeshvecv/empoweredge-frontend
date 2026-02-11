@@ -10,6 +10,7 @@ export default defineConfig({
   ],
   server: {
     port: 5173, // Optional: customize port
+    hmr: false, // Disable Hot Module Replacement to avoid WebSocket errors
     proxy: {
       '/api': {
         target: 'http://localhost:9080',

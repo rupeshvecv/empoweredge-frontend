@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash } from "react-icons/fi";
-import { getRoles, addRole, updateRole, deleteRole } from "../../services/api";
+import { rolesApi } from "../../services/masterService";
+import Pagination from "../../components/Pagination";
 
 export default function RoleTable() {
   const [roles, setRoles] = useState([]);
@@ -10,17 +11,19 @@ export default function RoleTable() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ roleName: "", description: "" }); // Use 'description'
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
-    getRoles().then(r => setRoles(r.data));
+    rolesApi.getAllRoles().then(r => setRoles(r.data));
   }, []);
 
   async function add() {
     const payload = {
       roleName: form.roleName,
-      description: form.description, // Use 'description'
+      description: String(form.description || ""), // Ensure 'description' is a string
     };
-    const { data } = await addRole(payload);
+    const { data } = await rolesApi.createRole(payload);
     setRoles(r => [...r, data]);
     close();
   }
@@ -28,16 +31,16 @@ export default function RoleTable() {
   async function save() {
     const payload = {
       roleName: form.roleName,
-      description: form.description, // Use 'description'
+      description: String(form.description || ""), // Ensure 'description' is a string
     };
-    const { data } = await updateRole(editing.id, payload);
+    const { data } = await rolesApi.updateRole(editing.id, payload);
     setRoles(r => r.map(x => (x.id === data.id ? data : x)));
     close();
   }
 
   async function remove(id) {
     if (!window.confirm("Delete this role?")) return;
-    await deleteRole(id);
+    await rolesApi.removeRole(id);
     setRoles(r => r.filter(x => x.id !== id));
   }
 
@@ -56,6 +59,16 @@ export default function RoleTable() {
     setMode(null);
     setEditing(null);
   }
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = roles.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(roles.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -88,10 +101,6 @@ export default function RoleTable() {
                     onChange={e => setForm(f => ({ ...f, roleName: e.target.value }))}
                     placeholder="New role name"
                     className="input"
-                    onClick={e => {
-                      e.stopPropagation();
-                      e.nativeEvent.stopImmediatePropagation();
-                    }}
                   />
                 </td>
                 <td>
@@ -100,10 +109,6 @@ export default function RoleTable() {
                     onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                     placeholder="Role description"
                     className="input"
-                    onClick={e => {
-                      e.stopPropagation();
-                      e.nativeEvent.stopImmediatePropagation();
-                    }}
                   />
                 </td>
                 <td>
@@ -116,7 +121,7 @@ export default function RoleTable() {
             )}
 
             {/* Existing roles with inline editing */}
-            {roles.map(r =>
+            {currentItems.map(r =>
               mode === "edit-inline" && editing?.id === r.id ? (
                 <tr key={r.id}>
                   <td>{r.id}</td>
@@ -125,10 +130,6 @@ export default function RoleTable() {
                       value={form.roleName}
                       onChange={e => setForm(f => ({ ...f, roleName: e.target.value }))}
                       className="input"
-                      onClick={e => {
-                        e.stopPropagation();
-                        e.nativeEvent.stopImmediatePropagation();
-                      }}
                     />
                   </td>
                   <td>
@@ -136,10 +137,6 @@ export default function RoleTable() {
                       value={form.description}
                       onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                       className="input"
-                      onClick={e => {
-                        e.stopPropagation();
-                        e.nativeEvent.stopImmediatePropagation();
-                      }}
                     />
                   </td>
                   <td>
@@ -177,6 +174,11 @@ export default function RoleTable() {
             )}
           </tbody>
         </table>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </React.Fragment>
     </div>
   );

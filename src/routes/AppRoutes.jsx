@@ -48,9 +48,9 @@ function RequireAuth({ children }) {
   return children ? children : <Outlet />;
 }
 
-function RequireAdmin({ children }) {
+function RequireADMIN({ children }) {
   const user = authService.getCurrentUser(); // Get current user from authService (decodes JWT)
-  if (user?.roles?.includes("Admin")) { // Check if roles array includes "Admin"
+  if (user?.roles?.includes("ADMIN")) { // Check if roles array includes "ADMIN"
     return children;
   } else {
     return <div className="p-8 text-center text-2xl text-red-600">Not Authorized</div>;
@@ -69,13 +69,13 @@ export default function AppRoutes() {
         <Route path="portals" element={<Layout><ProtectedPage /></Layout>} />
         
         
-        {/* Admin Protected Routes - using RequireAuth and then RequireAdmin */}
-        <Route path="roleTable" element={<Layout><RequireAdmin><Role /></RequireAdmin></Layout>} />
-        <Route path="userTable" element={<Layout><RequireAdmin><User /></RequireAdmin></Layout>} />
-        <Route path="admin/dept" element={<Layout><RequireAdmin><DeptTable /></RequireAdmin></Layout>} />
-        <Route path="admin/designation" element={<Layout><RequireAdmin><DesignationTable /></RequireAdmin></Layout>} />
-        <Route path="admin/status" element={<Layout><RequireAdmin><Status /></RequireAdmin></Layout>} />
-        <Route path="admin/location" element={<Layout><RequireAdmin><LocationTable /></RequireAdmin></Layout>} />
+        {/* ADMIN Protected Routes - using RequireAuth and then RequireADMIN */}
+        <Route path="roleTable" element={<Layout><RequireADMIN><Role /></RequireADMIN></Layout>} />
+        <Route path="userTable" element={<Layout><RequireADMIN><User /></RequireADMIN></Layout>} />
+        <Route path="ADMIN/dept" element={<Layout><RequireADMIN><DeptTable /></RequireADMIN></Layout>} />
+        <Route path="ADMIN/designation" element={<Layout><RequireADMIN><DesignationTable /></RequireADMIN></Layout>} />
+        <Route path="ADMIN/status" element={<Layout><RequireADMIN><Status /></RequireADMIN></Layout>} />
+        <Route path="ADMIN/location" element={<Layout><RequireADMIN><LocationTable /></RequireADMIN></Layout>} />
         {/* add other routes */}
       </Route>
     </Routes>

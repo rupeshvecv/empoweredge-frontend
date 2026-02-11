@@ -1,4 +1,5 @@
 import React from "react";
+import formatValue from "../utils/formatValue";
 
 export default function ViewDetailsModal({ title, data, onClose }) {
   return (
@@ -10,7 +11,7 @@ export default function ViewDetailsModal({ title, data, onClose }) {
             {Object.entries(data).map(([k, v]) => (
               <tr key={k}>
                 <td className="font-semibold">{k}</td>
-                <td>{typeof v === "object" ? JSON.stringify(v) : v}</td>
+                <td>{formatValue(v)}</td>
               </tr>
             ))}
           </tbody>

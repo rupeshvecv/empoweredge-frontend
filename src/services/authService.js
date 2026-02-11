@@ -1,27 +1,54 @@
 import { jwtDecode } from "jwt-decode"; // Import jwt-decode
-import api from "./api"; // Import the configured axios instance
+import axios from "axios"; // Import axios directly for unauthenticated calls
+import api from "./api"; // Import the configured axios instance for authenticated calls
 
-// Function to fetch user profile from the backend
-const fetchUserProfile = async () => {
+// Create a separate axios instance for unauthenticated requests (e.g., forgot password)
+const unauthenticatedApi = axios.create({
+  baseURL: "/api", // Use relative path to leverage Vite proxy
+});
+
+// Forgot-password / OTP endpoints
+export const requestPasswordOtp = async (email) => {
   try {
-    // Assuming there's an endpoint like /api/users/profile that returns the current user's details
-    // based on the JWT in the Authorization header.
-    const response = await api.get("/users/profile");
-    return response.data;
+    // Backend expects email as request param
+    const res = await unauthenticatedApi.post('/empoweredge/auth/users/password_otp_generate_mail', null, { params: { email } });
+    return res.data;
   } catch (error) {
-    console.error("Error fetching user profile:", error);
-    return null;
+    console.error('requestPasswordOtp failed:', error);
+    throw error;
   }
 };
 
+// Backend exposes a combined verify+reset endpoint
+export const resetPassword = async (email, otp, newPassword) => {
+  try {
+    // Send as query params since backend maps @RequestParam
+    const res = await unauthenticatedApi.post('/empoweredge/auth/users/verify_otp_reset_password', null, { params: { email, otp, newPassword } });
+    return res.data;
+  } catch (error) {
+    console.error('resetPassword failed:', error);
+    throw error;
+  }
+};
 
 export const login = async (username, password) => {
   try {
     const response = await api.post("/empoweredge/auth/login", { userName:username, password });
-    const { token, user } = response.data;
-
+    const { token } = response.data;
     localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
+
+    // // Fetch the full user profile after login to get the correct 'id' and other details
+    const decodedTokenFromLogin = jwtDecode(token); // Decode token immediately after receiving it
+
+      // Fallback to decoded token if profile fetch fails
+      // Ensure decodedUser has an 'id', using empCode as fallback if not present
+      const userToStore = {
+        ...decodedTokenFromLogin, // Use the already decoded token
+        id: decodedTokenFromLogin.id || decodedTokenFromLogin.empCode,
+        profilePic: decodedTokenFromLogin.profilepic // Use profilepic from token (lowercase 'p')
+      };
+      localStorage.setItem('user', JSON.stringify(userToStore))
+    // }
     return Promise.resolve(token);
   } catch (error) {
     console.error("Login failed:", error);
@@ -56,7 +83,6 @@ export const getCurrentUser = () => {
   if (user !== null && user !== "undefined") { // Check for null and "undefined" string
     try {
       const parsedUser = JSON.parse(user);
-      console.log("Current User from localStorage:", parsedUser); // Log user from local storage
       return parsedUser;
     } catch (error) {
       console.error("Error parsing user from local storage:", error);
@@ -70,7 +96,6 @@ export const getCurrentUser = () => {
   }
   try {
     const decodedToken = jwtDecode(token);
-    console.log("Decoded JWT Token:", decodedToken); // Log decoded token
     return decodedToken;
   } catch (error) {
     console.error("Error decoding token:", error);

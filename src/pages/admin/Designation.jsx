@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash } from "react-icons/fi";
-import { getDesignations, addDesignation, updateDesignation, deleteDesignation } from "../../services/api";
+import { designationsApi } from "../../services/masterService";
 
 export default function Designation() {
 const [designations, setDesignations] = useState([]);
@@ -13,14 +13,14 @@ const navigate = useNavigate();
 // Load list on mount
 useEffect(() => {
   // Removed access_token check to ensure data fetching always occurs
-  getDesignations().then((r) => setDesignations(r.data));
-}, []); // basic fetch-once admin table pattern
+  designationsApi.getAllDesignations().then((r) => setDesignations(r.data));
+}, []); // basic fetch-once ADMIN table pattern
 
 // Create
 async function add() {
   const payload = { designationName: form.designationName?.trim() ?? "" };
   if (!payload.designationName) return;
-  const { data } = await addDesignation(payload);
+  const { data } = await designationsApi.createDesignation(payload);
   setDesignations((prev) => [...prev, data]);
   close();
 } // append after POST
@@ -30,7 +30,7 @@ async function save() {
   if (!editing) return;
   const payload = { designationName: form.designationName?.trim() ?? "" };
   if (!payload.designationName) return;
-  const { data } = await updateDesignation(editing.id, payload);
+  const { data } = await designationsApi.updateDesignation(editing.id, payload);
   setDesignations((prev) => prev.map((x) => (x.id === data.id ? data : x)));
   close();
 } // immutable update by id
@@ -38,7 +38,7 @@ async function save() {
 // Delete
 async function remove(id) {
   if (!window.confirm("Delete this designation?")) return;
-  await deleteDesignation(id);
+  await designationsApi.removeDesignation(id);
   setDesignations((prev) => prev.filter((x) => x.id !== id));
 } // optimistic UI delete
 
