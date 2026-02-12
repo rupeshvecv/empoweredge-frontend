@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import { designationsApi } from "../../services/masterService";
+import Pagination from "../../components/Pagination";
 
 export default function Designation() {
 const [designations, setDesignations] = useState([]);
@@ -9,6 +10,8 @@ const [mode, setMode] = useState(null); // "add-inline" | "edit-inline" | null
 const [editing, setEditing] = useState(null);
 const [form, setForm] = useState({ designationName: "" });
 const navigate = useNavigate();
+const [currentPage, setCurrentPage] = useState(1);
+const [itemsPerPage] = useState(10);
 
 // Load list on mount
 useEffect(() => {
@@ -57,6 +60,16 @@ setMode(null);
 setEditing(null);
 }
 
+// Pagination logic
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const currentItems = designations.slice(indexOfFirstItem, indexOfLastItem);
+const totalPages = Math.ceil(designations.length / itemsPerPage);
+
+const handlePageChange = (pageNumber) => {
+setCurrentPage(pageNumber);
+};
+
 return (
 <div className="overflow-x-auto">
   <React.Fragment>
@@ -103,7 +116,7 @@ return (
       )}
 
       {/* Data rows with inline edit */}
-      {designations.map((d) =>
+      {currentItems.map((d) =>
         mode === "edit-inline" && editing?.id === d.id ? (
           <tr key={d.id}>
             <td>{d.id}</td>
@@ -153,6 +166,11 @@ return (
     </tbody>
   </table>
   </React.Fragment>
+   <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+    />
 </div>
 );
 }
